@@ -184,6 +184,7 @@ nav{
 
 main{padding:20px;max-width:1240px;margin:auto}
 main.wide{max-width:none;padding:14px 18px}
+main.ortu-wide{max-width:1400px}
 
 /* KPI Cards */
 .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px}
@@ -219,6 +220,7 @@ main.wide{max-width:none;padding:14px 18px}
 
 /* Grid & Cards */
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));gap:16px}
+.grid.ortu-grid{grid-template-columns:repeat(auto-fit,minmax(min(520px,100%),1fr));gap:18px}
 .card,.k,.sc,.grid>*{min-width:0}
 .card{
   background:var(--card);
@@ -621,14 +623,14 @@ function build(rows){
   
   // Kolom NIK & TTL Orang Tua
   const iNikAyah = findCol(h, [/nik\s*ayah/i, /no\.?\s*nik\s*ayah/i]);
-  const iTtlAyah = findCol(h, [/ttl\s*ayah/i, /tempat.*lahir\s*ayah/i]);
-  const iTmpAyah = findCol(h, [/tempat\s*lahir\s*ayah/i]);
-  const iTglAyah = findCol(h, [/tanggal\s*lahir\s*ayah/i, /tgl\s*lahir\s*ayah/i]);
+  const iTtlAyah = findCol(h, [/^ttl\s*ayah$/i]);
+  const iTmpAyah = findCol(h, [/tempat\s*lahir\s*ayah/i, /tmp\.?\s*lahir\s*ayah/i]);
+  const iTglAyah = findCol(h, [/tanggal\s*lahir\s*ayah/i, /tgl\.?\s*lahir\s*ayah/i, /tgl\.?\s*ayah/i]);
 
   const iNikIbu = findCol(h, [/nik\s*ibu/i, /no\.?\s*nik\s*ibu/i]);
-  const iTtlIbu = findCol(h, [/ttl\s*ibu/i, /tempat.*lahir\s*ibu/i]);
-  const iTmpIbu = findCol(h, [/tempat\s*lahir\s*ibu/i]);
-  const iTglIbu = findCol(h, [/tanggal\s*lahir\s*ibu/i, /tgl\s*lahir\s*ibu/i]);
+  const iTtlIbu = findCol(h, [/^ttl\s*ibu$/i]);
+  const iTmpIbu = findCol(h, [/tempat\s*lahir\s*ibu/i, /tmp\.?\s*lahir\s*ibu/i]);
+  const iTglIbu = findCol(h, [/tanggal\s*lahir\s*ibu/i, /tgl\.?\s*lahir\s*ibu/i, /tgl\.?\s*ibu/i]);
 
   return rows.slice(1).map(r=>{
     const o={};
@@ -648,23 +650,25 @@ function build(rows){
     // NIK & TTL Ayah
     const rawNikAyah = iNikAyah >= 0 ? r[iNikAyah] : (o['NIK Ayah'] || '');
     o['NIK Ayah'] = cleanId(rawNikAyah, 16);
+    const tmpA = iTmpAyah >= 0 ? (r[iTmpAyah]||'').trim() : (o['Tempat Lahir Ayah']||'');
+    const tglA = iTglAyah >= 0 ? (r[iTglAyah]||'').trim() : (o['Tanggal Lahir Ayah']||'');
+    o['Tanggal Lahir Ayah'] = tgl(tglA);
     if (iTtlAyah >= 0 && r[iTtlAyah]) {
       o['TTL Ayah'] = r[iTtlAyah].trim();
     } else {
-      const tmpA = iTmpAyah >= 0 ? (r[iTmpAyah]||'').trim() : (o['Tempat Lahir Ayah']||'');
-      const tglA = iTglAyah >= 0 ? (r[iTglAyah]||'').trim() : (o['Tanggal Lahir Ayah']||'');
-      o['TTL Ayah'] = [title(tmpA), tgl(tglA)].filter(Boolean).join(', ');
+      o['TTL Ayah'] = [title(tmpA), o['Tanggal Lahir Ayah']].filter(Boolean).join(', ');
     }
 
     // NIK & TTL Ibu
     const rawNikIbu = iNikIbu >= 0 ? r[iNikIbu] : (o['NIK Ibu'] || '');
     o['NIK Ibu'] = cleanId(rawNikIbu, 16);
+    const tmpI = iTmpIbu >= 0 ? (r[iTmpIbu]||'').trim() : (o['Tempat Lahir Ibu']||'');
+    const tglI = iTglIbu >= 0 ? (r[iTglIbu]||'').trim() : (o['Tanggal Lahir Ibu']||'');
+    o['Tanggal Lahir Ibu'] = tgl(tglI);
     if (iTtlIbu >= 0 && r[iTtlIbu]) {
       o['TTL Ibu'] = r[iTtlIbu].trim();
     } else {
-      const tmpI = iTmpIbu >= 0 ? (r[iTmpIbu]||'').trim() : (o['Tempat Lahir Ibu']||'');
-      const tglI = iTglIbu >= 0 ? (r[iTglIbu]||'').trim() : (o['Tanggal Lahir Ibu']||'');
-      o['TTL Ibu'] = [title(tmpI), tgl(tglI)].filter(Boolean).join(', ');
+      o['TTL Ibu'] = [title(tmpI), o['Tanggal Lahir Ibu']].filter(Boolean).join(', ');
     }
 
     return o;
@@ -751,9 +755,9 @@ function exportCSV(list, filenamePrefix) {
     'No', 'NIS', 'NISN', 'NIK', 'No KK', 'Nama Lengkap', 'Nama Arab',
     'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir', 'Umur',
     'Tingkat', 'Kelas / Rombel', 'Markaz', 'Wali Kelas',
-    'Anak Ke / Jml Saudara', 'Nama Ayah', 'NIK Ayah', 'TTL Ayah',
+    'Anak Ke / Jml Saudara', 'Nama Ayah', 'NIK Ayah', 'Tanggal Lahir Ayah', 'TTL Ayah',
     'Pendidikan Ayah', 'Pekerjaan Ayah', 'Penghasilan Ayah',
-    'Nama Ibu', 'NIK Ibu', 'TTL Ibu',
+    'Nama Ibu', 'NIK Ibu', 'Tanggal Lahir Ibu', 'TTL Ibu',
     'Pendidikan Ibu', 'Pekerjaan Ibu', 'Penghasilan Ibu',
     'Status Yatim', 'Jenis Yatim', 'Anak Pegawai', 'Nama Pegawai',
     'Alamat Lengkap', 'Kelurahan', 'Kecamatan', 'Kota/Kab', 'Provinsi', 'Kode Pos'
@@ -782,12 +786,14 @@ function exportCSV(list, filenamePrefix) {
     wrapTxt(anak(x)),
     wrapTxt(x['Nama Ayah']),
     wrapNum(x['NIK Ayah']),
+    wrapTxt(x['Tanggal Lahir Ayah']),
     wrapTxt(x['TTL Ayah']),
     wrapTxt(x['Pendidikan Ayah']),
     wrapTxt(x['Pekerjaan Ayah']),
     wrapTxt(x['Penghasilan Ayah']),
     wrapTxt(x['Nama Ibu']),
     wrapNum(x['NIK Ibu']),
+    wrapTxt(x['Tanggal Lahir Ibu']),
     wrapTxt(x['TTL Ibu']),
     wrapTxt(x['Pendidikan Ibu']),
     wrapTxt(x['Pekerjaan Ibu']),
@@ -954,6 +960,7 @@ function openT(t,f){
 
 function render(){
   $('#app').classList.toggle('wide',tab=='data');
+  $('#app').classList.toggle('ortu-wide',tab=='ortu');
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t==tab));
   $('#cs').classList.toggle('on',tab=='cari');
   $('#mkSel').disabled=tab=='cari';
@@ -982,12 +989,10 @@ function render(){
           <button class="abtn accent" onclick="exportCSV(window._dl, '${esc(expLabel)}')" title="Export data yang difilter ke CSV/Excel">
             ${ICO.export}<span>Export Data</span>
           </button>
-          <button class="abtn" id="tga" onclick="tgAll()"></button>
         </div>
       </div>
       <div class="lw dl" id="dlw"></div>`;
     drawDl();
-    updTga();
     return;
   }
 
@@ -996,7 +1001,7 @@ function render(){
   window._xt=[];
   const L=d.filter(x=>x['Gender']=='L'),P=d.filter(x=>x['Gender']=='P');
   window._k=[['Total Siswa (Berombel)',d],['Laki-laki',L],['Perempuan',P]];
-  h+=`<div class="kpi">${window._k.map((k,i)=>`<div class="k" onclick="openM('${k[0]}',window._k[${i}][1])"><b>${k[1].length}</b><span>${k[0]}</span></div>`).join('')}</div><div class="grid">`;
+  h+=`<div class="kpi">${window._k.map((k,i)=>`<div class="k" onclick="openM('${k[0]}',window._k[${i}][1])"><b>${k[1].length}</b><span>${k[0]}</span></div>`).join('')}</div><div class="grid${tab=='ortu'?' ortu-grid':''}">`;
   
   if(tab=='siswa'){
     h+=jkTingkatCard(d);
@@ -1123,13 +1128,20 @@ function cardS(x){
         ${f('Nama Arab',x['Nama Arab'],'w')}
         ${f('Tempat, Tanggal Lahir',ttl(x))}
         ${f('Anak Ke / Jml Saudara',anak(x))}
-        <div class="dg-sec">Data Orang Tua</div>
+        <div class="dg-sec">Data Ayah</div>
         ${f('Nama Ayah',x['Nama Ayah'])}
         ${f('NIK Ayah',x['NIK Ayah'])}
         ${f('TTL Ayah',x['TTL Ayah'])}
+        ${f('Pendidikan Ayah',x['Pendidikan Ayah'])}
+        ${f('Pekerjaan Ayah',x['Pekerjaan Ayah'])}
+        ${f('Penghasilan Ayah',x['Penghasilan Ayah'])}
+        <div class="dg-sec">Data Ibu</div>
         ${f('Nama Ibu',x['Nama Ibu'])}
         ${f('NIK Ibu',x['NIK Ibu'])}
         ${f('TTL Ibu',x['TTL Ibu'])}
+        ${f('Pendidikan Ibu',x['Pendidikan Ibu'])}
+        ${f('Pekerjaan Ibu',x['Pekerjaan Ibu'])}
+        ${f('Penghasilan Ibu',x['Penghasilan Ibu'])}
         <div class="dg-sec">Domisili</div>
         ${f('Alamat Lengkap',alamat(x),'full')}
       </div>
@@ -1181,13 +1193,20 @@ function lstHTML(id,list){
             ${f('No KK',x['No KK'])}
             ${f('Anak Ke / Jml Saudara',anak(x))}
             ${f('Nama Arab',x['Nama Arab'],'w')}
-            <div class="dg-sec">Identitas &amp; TTL Orang Tua</div>
+            <div class="dg-sec">Data Ayah</div>
             ${f('Nama Ayah',x['Nama Ayah'])}
             ${f('NIK Ayah',x['NIK Ayah'])}
             ${f('TTL Ayah',x['TTL Ayah'])}
+            ${f('Pendidikan Ayah',x['Pendidikan Ayah'])}
+            ${f('Pekerjaan Ayah',x['Pekerjaan Ayah'])}
+            ${f('Penghasilan Ayah',x['Penghasilan Ayah'])}
+            <div class="dg-sec">Data Ibu</div>
             ${f('Nama Ibu',x['Nama Ibu'])}
             ${f('NIK Ibu',x['NIK Ibu'])}
             ${f('TTL Ibu',x['TTL Ibu'])}
+            ${f('Pendidikan Ibu',x['Pendidikan Ibu'])}
+            ${f('Pekerjaan Ibu',x['Pekerjaan Ibu'])}
+            ${f('Penghasilan Ibu',x['Penghasilan Ibu'])}
             <div class="dg-sec">Alamat Lengkap</div>
             ${f('Alamat Domisili',alamat(x),'full')}
           </div>
@@ -1199,21 +1218,11 @@ function lstHTML(id,list){
 
 let OPEN=new Set();
 const dk=x=>x['ID']||x['NISN']||x['Nama'];
-function updTga(){
-  const b=$('#tga');
-  if(b) b.innerHTML = OPEN.size ? `${ICO.chevUp}<span>Tutup Detail</span>` : `${ICO.chevDown}<span>Buka Detail</span>`;
-}
 function tgr(tr){
   const k=tr.dataset.k,o=!tr.classList.contains('open');
   tr.classList.toggle('open',o);
   tr.nextElementSibling.classList.toggle('open',o);
   o?OPEN.add(k):OPEN.delete(k);
-  updTga();
-}
-function tgAll(){
-  OPEN=OPEN.size?new Set():new Set((window._dl||[]).map(dk));
-  drawDl();
-  updTga();
 }
 function drawM(){
   $('#mc').textContent=curList.length+' siswa'+(curSub?' · '+curSub:'');
