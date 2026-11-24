@@ -1026,6 +1026,7 @@ function render(){
     h+=bars('Anak Pegawai per Tingkat',group(p,x=>'Kelas '+x['Tingkat']),{order:TING.map(t=>'Kelas '+t)});
   }
   if(tab=='wilayah'){
+    h+=xtab('Siswa per Kecamatan',d,x=>title(x['Kecamatan']),null,'Kecamatan');
     h+=xtab('Siswa per Kota/Kab',d,x=>title(x['Kota']),null,'Kota/Kab');
     h+=xtab('Siswa per Provinsi',d,x=>title(x['Provinsi']),null,'Provinsi');
   }
