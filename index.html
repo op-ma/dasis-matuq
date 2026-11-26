@@ -368,6 +368,11 @@ tr.sub td{font-weight:700;background:var(--acc-soft);color:var(--acc)}
 .scroll tr.tot td{position:sticky;bottom:0;box-shadow:0 -1px 0 var(--line)}
 .xt td:first-child{word-break:break-word}
 .xt td.z{color:#cbd5e1}
+.pk th,.pk td{text-align:left;vertical-align:top}
+.pk th.cn,.pk td.cn{text-align:center}
+.pk td.nm{font-weight:700;color:var(--b1)}
+.pk .ch{padding:2px 0;white-space:nowrap}
+.pk .ch span{color:var(--mut);font-size:13px}
 .fq{flex:1;min-width:200px;max-width:380px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:14px;background:#fff}
 .fnote{display:block;color:var(--mut);font-size:13px;margin:0 0 10px;text-align:left}
 .fam .lst th,.fam .lst td{text-align:left}
@@ -1349,6 +1354,7 @@ function render(){
     h+=bars('Anak Pegawai / Karyawan',group(d,x=>x['Anak Pegawai']=='Ya'?'Anak Pegawai/Karyawan':'Bukan Anak Pegawai'));
     h+=bars('Anak Pegawai per Markaz',group(p,x=>'Markaz '+x._mk));
     h+=bars('Anak Pegawai per Tingkat',group(p,x=>'Kelas '+x['Tingkat']),{order:TING.map(t=>'Kelas '+t)});
+    if(p.length)h+=pegKelCard(p);
   }
   if(tab=='wilayah'){
     h+=xtab('Siswa per Kecamatan',d,x=>title(x['Kecamatan']),null,'Kecamatan','ortu',x=>title(x['Kelurahan']));
@@ -1402,6 +1408,29 @@ function renderKeluarga(){
   <small class="fnote" id="fsum"></small>
   <div class="lw dl fam" id="famw"></div>`;
   drawFam();
+}
+function pegKelCard(p){
+  const id='cPegKel',FR={VII:1,VIII:2,IX:3,X:4,XI:5,XII:6};
+  const kkOf=x=>/^(?!0+$)\d{16}$/.test(x['No KK']||'')?x['No KK']:'';
+  const ayN=x=>nrm(x['Nama Ayah']);
+  const g=new Map(),kkAy=new Map();
+  const add=(k,x)=>{(g.get(k)||g.set(k,[]).get(k)).push(x)};
+  p.forEach(x=>{const kk=kkOf(x);if(!kk)return;const k=ayN(x)+'|'+kk;add(k,x);if(ayN(x)&&!kkAy.has(ayN(x)))kkAy.set(ayN(x),k)});
+  p.forEach(x=>{if(kkOf(x))return;const a=ayN(x);add(a?(kkAy.get(a)||a+'|'):'|'+nrm(x['Nama'])+x['NISN'],x)});
+  const rows=[...g.values()].map(m=>{
+    m.sort((a,b)=>(FR[b['Tingkat']]||0)-(FR[a['Tingkat']]||0)||a['Nama'].localeCompare(b['Nama']));
+    const f=k=>(m.find(x=>(x[k]||'').trim())||{})[k]||'';
+    return {m,ayah:f('Nama Ayah'),peg:f('Nama Pegawai'),kk:(m.find(kkOf)||{})['No KK']||''};
+  });
+  rows.sort((a,b)=>b.m.length-a.m.length||(a.peg||a.ayah).localeCompare(b.peg||b.ayah,'id'));
+  const C=[null,r=>r.peg,r=>r.ayah,r=>r.kk,r=>r.m.length,r=>r.m[0]['Nama']];
+  CARDS[id]=()=>{
+    const s=SORT[id];let o=rows;
+    if(s&&C[s.c])o=rows.slice().sort((a,b)=>{const A=C[s.c](a),B=C[s.c](b),ea=A===''||A==null,eb=B===''||B==null;if(ea&&!eb)return 1;if(!ea&&eb)return -1;return s.d*cmp(A,B)});
+    const body=o.map((r,i)=>`<tr><td class="cn">${i+1}</td><td class="nm">${esc(r.peg)||'-'}</td><td>${esc(r.ayah)||'-'}</td><td class="nw">${esc(r.kk)||'-'}</td><td class="cn">${r.m.length}</td><td>${r.m.map(x=>`<div class="ch"><b>${esc(x['Nama'])}</b> <span>· ${esc(x['Kelas'])||'-'} · ${esc(x._mk)}</span></div>`).join('')}</td></tr>`).join('');
+    return `<div class="card full" id="${id}"><h3><span>Anak Pegawai per Keluarga · ${rows.length} keluarga · ${p.length} anak</span></h3><div class="xw"><table class="xt pk"><tr><th class="cn">No</th>${th(id,1,'Nama Pegawai')}${th(id,2,'Nama Ayah')}${th(id,3,'No KK')}${th(id,4,'Jml Anak','cn')}${th(id,5,'Nama Anak (digabung)')}</tr>${body}</table></div></div>`;
+  };
+  return CARDS[id]();
 }
 function famFiltered(){const q=nrm(famQ);return q?window._fam.filter(f=>f.s.includes(q)):window._fam}
 function famList(){
