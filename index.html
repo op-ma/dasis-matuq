@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Data Siswa MA Al-Ma'tuq 2026/2027</title>
+<title>Data Siswa MA & MTs Al-Ma'tuq 2026/2027</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Data Siswa MA">
+<meta name="apple-mobile-web-app-title" content="Data Siswa">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#1e293b">
 <link rel="icon" href="icon-192.png">
@@ -599,7 +599,7 @@ small.wk{display:block;font-size:12.5px;font-weight:400;color:var(--mut);margin-
   <div class="hd">
     <img class="logo" src="icon-192.png" alt="Logo" onerror="this.src='https://placehold.co/100x100/17253b/ffffff?text=MA'">
     <div>
-      <h1>Dashboard Data Siswa MA Al-Ma'tuq</h1>
+      <h1>Dashboard Data Siswa MA &amp; MTs Al-Ma'tuq</h1>
       <small>Tahun Ajaran 2026/2027</small>
       <small id="sub">Memuat data…</small>
     </div>
@@ -709,8 +709,9 @@ function execCopyFormat(mode){
   const lines=[];
   if(mode==='wa'){
     const mainTitle=getTitle(box);
+    const jjLbl=jj=='Semua'?'MA & MTs':jj;
     lines.push(`*${mainTitle.toUpperCase()}*`);
-    lines.push(`_MA Al-Ma'tuq (${mk=='Semua'?'Semua Markaz':'Markaz '+mk}) · TA ${TA}_`);
+    lines.push(`_${jjLbl} Al-Ma'tuq (${mk=='Semua'?'Semua Markaz':'Markaz '+mk}) · TA ${TA}_`);
     lines.push('');
 
     const formatTableWA=(tbl)=>{
@@ -733,77 +734,85 @@ function execCopyFormat(mode){
     };
 
     if(allBoxes){
-      box.querySelectorAll('.tb').forEach((tb,idx)=>{
-        if(idx>0)lines.push('');
-        const subTitle=getTitle(tb);
-        const subMeta=(tb.querySelector('.tbh span')||{}).textContent||'';
-        lines.push(`*${subTitle}*${subMeta?` (${subMeta.trim()})`:''}`);
+      box.querySelectorAll('.tb').forEach((tb,i)=>{
+        if(i>0)lines.push('');
+        const subH=tb.querySelector('.tbh');
+        const subTitle=subH?subH.childNodes[0].textContent.trim():'';
+        const subStat=subH&&subH.querySelector('span')?subH.querySelector('span').textContent.trim():'';
+        lines.push(`*${subTitle}*${subStat?` (${subStat})`:''}`);
         const tbl=tb.querySelector('table');
         if(tbl)formatTableWA(tbl);
       });
       const tgt=box.querySelector('.tgt');
       if(tgt){
         lines.push('');
-        lines.push(`*${tgt.textContent.replace(/\s+/g,' ').trim()}*`);
+        lines.push(`_${tgt.textContent.replace(/\s+/g,' ').trim()}_`);
       }
+    }else if(box.querySelector('table')){
+      formatTableWA(box.querySelector('table'));
     }else{
-      const tbl=box.querySelector('table');
-      if(tbl){
-        formatTableWA(tbl);
-      }else{
-        box.querySelectorAll('.row').forEach(r=>{
-          const l=((r.querySelector('.l')||{}).textContent||'').trim();
-          const n=((r.querySelector('.n')||{}).textContent||'').trim();
-          lines.push(`• ${l} : *${n}* siswa`);
-        });
-      }
+      const rows=box.querySelectorAll('.row');
+      rows.forEach(r=>{
+        const l=r.querySelector('.l')?.textContent.trim()||'';
+        const n=r.querySelector('.n')?.textContent.trim()||'';
+        lines.push(`• *${l}*: *${n}*`);
+      });
     }
   }else{
-    if(allBoxes){
-      box.querySelectorAll('.tb').forEach((tb,idx)=>{
-        if(idx>0)lines.push('');
-        const subTitle=getTitle(tb);
-        if(subTitle)lines.push(subTitle);
-        tb.querySelectorAll('tr').forEach(tr=>{
-          lines.push([...tr.children].map(cleanCell).join('\t'));
-        });
+    const pushTableTSV=(tbl,subTitle)=>{
+      if(subTitle)lines.push(subTitle);
+      tbl.querySelectorAll('tr').forEach(tr=>{
+        const cells=[...tr.children].map(cleanCell);
+        lines.push(cells.join('\t'));
       });
-    }else{
-      const tbl=box.querySelector('table');
-      if(tbl){
-        tbl.querySelectorAll('tr').forEach(tr=>{
-          lines.push([...tr.children].map(cleanCell).join('\t'));
-        });
-      }else{
-        lines.push('Kategori\tJumlah');
-        box.querySelectorAll('.row').forEach(r=>{
-          const l=(r.querySelector('.l')||{}).textContent||'';
-          const n=(r.querySelector('.n')||{}).textContent||'';
-          lines.push(`${l.trim()}\t${n.trim()}`);
-        });
+    };
+    const mainTitle=getTitle(box);
+    if(mainTitle)lines.push(mainTitle);
+    if(allBoxes){
+      box.querySelectorAll('.tb').forEach((tb,i)=>{
+        if(i>0)lines.push('');
+        const subH=tb.querySelector('.tbh');
+        const subTitle=subH?subH.childNodes[0].textContent.trim():'';
+        const tbl=tb.querySelector('table');
+        if(tbl)pushTableTSV(tbl,subTitle);
+      });
+      const tgt=box.querySelector('.tgt');
+      if(tgt){
+        lines.push('');
+        lines.push(tgt.textContent.replace(/\s+/g,' ').trim());
       }
+    }else if(box.querySelector('table')){
+      pushTableTSV(box.querySelector('table'),'');
+    }else{
+      lines.push('Kategori\tJumlah');
+      box.querySelectorAll('.row').forEach(r=>{
+        const l=r.querySelector('.l')?.textContent.trim()||'';
+        const n=r.querySelector('.n')?.textContent.trim()||'';
+        lines.push(`${l}\t${n}`);
+      });
     }
   }
 
+  const text=lines.join('\n');
   const ta=document.createElement('textarea');
-  ta.value=lines.join('\n');
-  ta.style.position='fixed';
-  ta.style.left='-9999px';
+  ta.value=text;
+  ta.style.cssText='position:fixed;left:-9999px;top:0;opacity:0';
   document.body.appendChild(ta);
+  ta.focus();
   ta.select();
-  try{
-    document.execCommand('copy');
-    const orig=btn.innerHTML;
-    btn.classList.add('ok');
-    btn.innerHTML=`${ICO.check}<span>Tersalin</span>`;
-    showToast(mode==='wa'?'Format pesan WhatsApp berhasil disalin!':'Format tabel Excel berhasil disalin!');
-    setTimeout(()=>{btn.classList.remove('ok');btn.innerHTML=orig},1800);
-  }catch(_){
-    showToast('Gagal menyalin data.');
-  }
+  let ok=false;
+  try{ok=document.execCommand('copy')}catch(_){}
   document.body.removeChild(ta);
+  if(!ok&&navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).catch(()=>{});
+  }
+  const orig=btn.innerHTML;
+  btn.classList.add('ok');
+  btn.innerHTML=`${ICO.check}<span>Tersalin</span>`;
+  showToast(mode==='wa'?'Format pesan WhatsApp berhasil disalin!':'Tabel Excel/Sheets berhasil disalin!');
+  setTimeout(()=>{btn.classList.remove('ok');btn.innerHTML=orig},1600);
 }
-const cpBtn=(all=false)=>`<button type="button" class="cpbtn" onclick="openCopyMenu(event,this,${all})" title="Pilih format salin (WhatsApp / Excel)">${ICO.copy}<span>Salin ▾</span></button>`;
+const cpBtn=(allBoxes=false)=>`<button type="button" class="cpbtn" onclick="openCopyMenu(event,this,${allBoxes})" title="Salin tabel untuk WhatsApp atau Excel">${ICO.copy}<span>Salin ▾</span></button>`;
 
 // ====== KONFIGURASI & PEMBERSIH DATA ======
 const SHEET_ID='1khNpDumFu70ODoqPRqgSoRYVBA4j1rPtno4pkGB51VE';
@@ -811,16 +820,20 @@ const GID='0';
 const TA='2026/2027';
 const URL_CSV=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
 const ORDER_INC=['Tidak Ada','Kurang dari 500.000','500.000 - 1.000.000','1.000.001 - 2.000.000','2.000.001 - 3.000.000','3.000.001 - 5.000.000','Lebih dari 5.000.000'];
-const TING=['X','XI','XII'];
-let ALL=[],mk='Semua',tab='siswa',curList=[],kf='Semua',SHEET_COLS=[];
+const TING_MA=['X','XI','XII'];
+const TING_MTS=['VII','VIII','IX'];
+const getTing=()=>jj=='MTs'?TING_MTS:jj=='MA'?TING_MA:[...TING_MTS,...TING_MA];
+let ALL=[],mk='Semua',jj='Semua',tab='siswa',curList=[],kf='Semua',SHEET_COLS=[];
 const $=s=>document.querySelector(s);
 
 function csv(t){
   const r=[];let w=[],f='',q=false;
   for(let i=0;i<t.length;i++){
     const c=t[i];
-    if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
-    else if(c=='"')q=true;
+    if(q){
+      if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}
+      else f+=c;
+    }else if(c=='"')q=true;
     else if(c==','){w.push(f);f=''}
     else if(c=='\n'){w.push(f);r.push(w);w=[];f=''}
     else if(c!='\r')f+=c;
@@ -829,79 +842,86 @@ function csv(t){
   return r;
 }
 
-// Menjaga angka 0 di awal NISN & membersihkan simbol + / notasi ilmiah pada NIK/KK
+// Membersihkan simbol '+', tanda petik, notasi ilmiah, serta mempertahankan angka 0 di awal
 function cleanID(val, padLen){
-  let s = String(val || '').trim().replace(/^['"+]+/, '');
-  if(!s || s === '-') return '';
-  if(/e\+/i.test(s)){
+  let s = String(val||'').trim();
+  if(!s) return '';
+  s = s.replace(/^['"`+\s]+/, '').replace(/['"`\s]+$/g, '');
+  if(/^\d+([.,]\d+)?e\+\d+$/i.test(s)){
     const num = Number(s.replace(',', '.'));
     if(!isNaN(num)) s = num.toLocaleString('fullwide', {useGrouping:false});
   }
-  const digits = s.replace(/\D/g, '');
-  if(!digits) return s;
-  if(padLen && digits.length > 0 && digits.length < padLen){
-    return digits.padStart(padLen, '0');
+  s = s.replace(/[^\d]/g, '');
+  if(!s) return '';
+  if(padLen && s.length < padLen){
+    s = s.padStart(padLen, '0');
   }
-  return digits;
+  return s;
+}
+
+function findCol(h, regex){
+  return h.findIndex(k => regex.test(k));
 }
 
 function build(rows){
-  if(!rows || !rows.length) return [];
-  const h = rows[0].map(x=>x.trim());
-  SHEET_COLS = h.filter(Boolean);
-  const ikk = h.findIndex(k=>/^(no\.?\s*)?(kk|kartu keluarga)$|no\.?\s*(kk|kartu keluarga)|nomor\s*(kk|kartu keluarga)/i.test(k));
-  const inikAyah = h.findIndex(k=>/nik\s*ayah/i.test(k));
-  const inikIbu = h.findIndex(k=>/nik\s*ibu/i.test(k));
-  const itmpAyah = h.findIndex(k=>/tempat\s*lahir\s*ayah/i.test(k));
-  const itglAyah = h.findIndex(k=>/(tanggal|tgl)\s*lahir\s*ayah/i.test(k));
-  const ittlAyah = h.findIndex(k=>/ttl\s*ayah/i.test(k));
-  const itmpIbu = h.findIndex(k=>/tempat\s*lahir\s*ibu/i.test(k));
-  const itglIbu = h.findIndex(k=>/(tanggal|tgl)\s*lahir\s*ibu/i.test(k));
-  const ittlIbu = h.findIndex(k=>/ttl\s*ibu/i.test(k));
-  const ikelas = h.findIndex(k=>/^(kelas|rombel)$/i.test(k));
+  const h=rows[0].map(x=>x.trim());
+  SHEET_COLS=h.filter(Boolean);
+  const ikk=findCol(h, /^(no\.?\s*)?(kk|kartu keluarga)$|no\.?\s*(kk|kartu keluarga)|nomor\s*(kk|kartu keluarga)/i);
+  const inikAyah=findCol(h, /nik.*ayah|ayah.*nik/i);
+  const inikIbu=findCol(h, /nik.*ibu|ibu.*nik/i);
+  const itmpAyah=findCol(h, /tempat.*lahir.*ayah|ayah.*tempat.*lahir|tmp.*lahir.*ayah/i);
+  const itglAyah=findCol(h, /(tanggal|tgl).*lahir.*ayah|ayah.*(tanggal|tgl).*lahir/i);
+  const ittlAyah=findCol(h, /\bttl\b.*ayah|ayah.*\bttl\b/i);
+  const itmpIbu=findCol(h, /tempat.*lahir.*ibu|ibu.*tempat.*lahir|tmp.*lahir.*ibu/i);
+  const itglIbu=findCol(h, /(tanggal|tgl).*lahir.*ibu|ibu.*(tanggal|tgl).*lahir/i);
+  const ittlIbu=findCol(h, /\bttl\b.*ibu|ibu.*\bttl\b/i);
 
   return rows.slice(1).map(r=>{
     const o={};
     h.forEach((k,i)=>o[k]=(r[i]||'').trim());
 
-    // Wajib mempunyai rombel / kelas
-    const rombel = (ikelas >= 0 ? r[ikelas] : (o['Kelas'] || o['Rombel'] || '')).trim();
-    if(!rombel || /^(-|belum|kosong|tanpa kelas)$/i.test(rombel)) return null;
+    // Wajib memiliki Nama & Rombel/Kelas (data yang mempunyai rombel saja)
+    if(!o['Nama']) return null;
+    const rombel = (o['Kelas'] || o['Rombel'] || '').trim();
+    if(!rombel) return null;
     o['Kelas'] = rombel;
 
-    if(!o['Nama']) return null;
+    // Perbaikan format NISN, NIK, dan No KK
     o['Nama'] = o['Nama'].toUpperCase();
-
-    // Perbaikan NISN, NIK, dan No KK
+    o['NIS']  = (o['NIS']||'').replace(/^['"`+\s]+/, '').trim();
     o['NISN'] = cleanID(o['NISN'], 10);
-    o['NIK'] = cleanID(o['NIK'], 16);
-    const rawKK = ikk >= 0 ? r[ikk] : (o['No KK'] || o['KK'] || '');
+    o['NIK']  = cleanID(o['NIK'], 16);
+    const rawKK = ikk>=0 ? (r[ikk]||'') : (o['No KK']||o['KK']||'');
     o['No KK'] = cleanID(rawKK, 16);
 
-    // Info NIK Orang Tua
-    const rawNikAyah = inikAyah >= 0 ? r[inikAyah] : (o['NIK Ayah'] || '');
-    const rawNikIbu = inikIbu >= 0 ? r[inikIbu] : (o['NIK Ibu'] || '');
-    o['NIK Ayah'] = cleanID(rawNikAyah, 16);
-    o['NIK Ibu'] = cleanID(rawNikIbu, 16);
+    // Data NIK & Tanggal Lahir / TTL Orang Tua
+    o['NIK Ayah'] = cleanID(inikAyah>=0 ? r[inikAyah] : (o['NIK Ayah']||''), 16);
+    o['NIK Ibu']  = cleanID(inikIbu>=0 ? r[inikIbu] : (o['NIK Ibu']||''), 16);
 
-    // Info Tanggal Lahir & TTL Orang Tua
-    const tmpA = itmpAyah >= 0 ? (r[itmpAyah]||'').trim() : (o['Tempat Lahir Ayah']||'').trim();
-    const tglA = itglAyah >= 0 ? (r[itglAyah]||'').trim() : (o['Tanggal Lahir Ayah']||'').trim();
-    const ttlA = ittlAyah >= 0 ? (r[ittlAyah]||'').trim() : (o['TTL Ayah']||'').trim();
+    const tmpA = itmpAyah>=0 ? (r[itmpAyah]||'').trim() : (o['Tempat Lahir Ayah']||'');
+    const tglA = itglAyah>=0 ? (r[itglAyah]||'').trim() : (o['Tanggal Lahir Ayah']||'');
+    const ttlA = ittlAyah>=0 ? (r[ittlAyah]||'').trim() : (o['TTL Ayah']||'');
     o['Tanggal Lahir Ayah'] = tglA ? tgl(tglA) : '';
     o['TTL Ayah'] = ttlA || [title(tmpA), o['Tanggal Lahir Ayah']].filter(Boolean).join(', ');
 
-    const tmpI = itmpIbu >= 0 ? (r[itmpIbu]||'').trim() : (o['Tempat Lahir Ibu']||'').trim();
-    const tglI = itglIbu >= 0 ? (r[itglIbu]||'').trim() : (o['Tanggal Lahir Ibu']||'').trim();
-    const ttlI = ittlIbu >= 0 ? (r[ittlIbu]||'').trim() : (o['TTL Ibu']||'').trim();
+    const tmpI = itmpIbu>=0 ? (r[itmpIbu]||'').trim() : (o['Tempat Lahir Ibu']||'');
+    const tglI = itglIbu>=0 ? (r[itglIbu]||'').trim() : (o['Tanggal Lahir Ibu']||'');
+    const ttlI = ittlIbu>=0 ? (r[ittlIbu]||'').trim() : (o['TTL Ibu']||'');
     o['Tanggal Lahir Ibu'] = tglI ? tgl(tglI) : '';
     o['TTL Ibu'] = ttlI || [title(tmpI), o['Tanggal Lahir Ibu']].filter(Boolean).join(', ');
 
-    // Filter Sekolah, Markaz, Tahun Ajaran, dan Status Aktif
+    // Filter Sekolah (MA Al-Ma'tuq & MTs Al-Ma'tuq), Markaz, Tahun Ajaran, dan Status Aktif
     const s=(o['Sekolah']||'').toLowerCase().replace(/[’`]/g,"'");
-    if(!/^ma\s/.test(s)||!s.includes('tuq'))return null;
+    const isMA=/^ma\s/.test(s)&&s.includes('tuq');
+    const isMTs=/^mts\s/.test(s)&&s.includes('tuq');
+    if(!isMA&&!isMTs)return null;
+    o._jj=isMTs?'MTs':'MA';
+    if(o._jj=='MTs'){
+      const tm={'7':'VII','8':'VIII','9':'IX'};
+      if(tm[o['Tingkat']])o['Tingkat']=tm[o['Tingkat']];
+    }
     o._mk=s.includes('zamil')?'Al-Zamil':s.includes('bassam')?'Al-Bassam':s.includes('afaf')?'Al-Afaf':"Al-Ma'tuq";
-    if(o._mk=='Al-Bassam'&&o['Tingkat']!='XII')return null;
+    if(o._jj=='MA'&&o._mk=='Al-Bassam'&&o['Tingkat']!='XII')return null;
     if(o['Tahun Ajaran']&&o['Tahun Ajaran']!=TA)return null;
     if(o['Status']&&o['Status']!='Aktif')return null;
     return o;
@@ -916,147 +936,100 @@ let WALI={};
 const kn=k=>(k||'').toLowerCase().replace(/\s+/g,'');
 function mn(m){m=(m||'').toLowerCase();return m.includes('zamil')?'alzamil':m.includes('bassam')?'albassam':m.includes('afaf')?'alafaf':m.includes('tuq')?'almatuq':''}
 const wali=(m,k)=>WALI[mn(m)+'|'+kn(k)]||WALI['|'+kn(k)]||'';
-async function loadWali(){
-  WALI={};
-  try{
-    if(WALI_GID!==''||WALI_SHEET){
-      let rows;
-      try{
-        const r=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&`+(WALI_GID!==''?`gid=${WALI_GID}`:`sheet=${encodeURIComponent(WALI_SHEET)}`));
-        if(!r.ok)throw 0;
-        const t=await r.text();
-        if(t.trim().startsWith('<'))throw 0;
-        rows=csv(t);
-        localStorage.setItem('ma_wali',JSON.stringify(rows));
-      }catch(e){
-        rows=JSON.parse(localStorage.getItem('ma_wali')||'[]');
-      }
-      if(rows.length){
-        const h=rows[0].map(x=>x.trim().toLowerCase()),ik=h.indexOf('kelas'),iw=h.findIndex(x=>x.includes('wali')),im=h.findIndex(x=>x.startsWith('markaz')||x=='sekolah');
-        if(ik>=0&&iw>=0)rows.slice(1).forEach(r=>{const k=(r[ik]||'').trim(),w=(r[iw]||'').trim();if(k&&w)WALI[mn(im>=0?r[im]:'')+'|'+kn(k)]=w});
-      }
-    }
-    Object.entries(WALI_MANUAL).forEach(([k,v])=>{const p=k.split('|'),c=p.pop();WALI[mn(p[0]||'')+'|'+kn(c)]=v});
-  }catch(e){}
+
+function fetchWithTimeout(url,ms=15000){
+  const ctrl=new AbortController();
+  const tid=setTimeout(()=>ctrl.abort(),ms);
+  return fetch(url,{signal:ctrl.signal}).finally(()=>clearTimeout(tid));
 }
 
-async function load(){
-  $('#sub').textContent='Memuat data…';
+function applyWaliRows(rows){
+  WALI={};
+  if(rows&&rows.length){
+    const h=rows[0].map(x=>x.trim().toLowerCase()),ik=h.indexOf('kelas'),iw=h.findIndex(x=>x.includes('wali')),im=h.findIndex(x=>x.startsWith('markaz')||x=='sekolah');
+    if(ik>=0&&iw>=0)rows.slice(1).forEach(r=>{const k=(r[ik]||'').trim(),w=(r[iw]||'').trim();if(k&&w)WALI[mn(im>=0?r[im]:'')+'|'+kn(k)]=w});
+  }
+  Object.entries(WALI_MANUAL).forEach(([k,v])=>{const p=k.split('|'),c=p.pop();WALI[mn(p[0]||'')+'|'+kn(c)]=v});
+}
+
+async function loadWali(){
+  try{
+    applyWaliRows(JSON.parse(localStorage.getItem('ma_wali')||'[]'));
+    if(WALI_GID!==''||WALI_SHEET){
+      const r=await fetchWithTimeout(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&`+(WALI_GID!==''?`gid=${WALI_GID}`:`sheet=${encodeURIComponent(WALI_SHEET)}`),10000);
+      if(!r.ok)return;
+      const t=await r.text();
+      if(t.trim().startsWith('<'))return;
+      const rows=csv(t);
+      try{localStorage.setItem('ma_wali',JSON.stringify(rows))}catch(_){}
+      applyWaliRows(rows);
+    }
+  }catch(_){}
+}
+
+function hydrateCache(j){
+  ALL=j.d||[];
+  SHEET_COLS=j.cols||[];
+  ALL.forEach(x=>{
+    x['Nama']=(x['Nama']||'').toUpperCase();
+    x['NISN']=cleanID(x['NISN'],10);
+    x['NIK']=cleanID(x['NIK'],16);
+    x['No KK']=cleanID(x['No KK'],16);
+    if(!x._jj)x._jj=/^mts\s/i.test(x['Sekolah']||'')?'MTs':'MA';
+  });
+}
+
+async function load(manual=false){
+  // Tampilkan data cache seketika agar tidak menunggu lama saat membuka halaman
+  if(!ALL.length){
+    try{
+      const c=localStorage.getItem('ma_cache');
+      if(c){
+        const j=JSON.parse(c);
+        hydrateCache(j);
+        applyWaliRows(JSON.parse(localStorage.getItem('ma_wali')||'[]'));
+        done('Menyinkronkan data terbaru… (tersimpan '+new Date(j.t).toLocaleString('id-ID')+')');
+      }
+    }catch(_){}
+  }else if(manual){
+    $('#sub').textContent='Memperbarui data dari Google Sheet…';
+  }
+
   const wp=loadWali();
   try{
-    const r=await fetch(URL_CSV);
+    const r=await fetchWithTimeout(URL_CSV,18000);
     if(!r.ok)throw 0;
     const t=await r.text();
     if(t.trim().startsWith('<'))throw 0;
-    const parsed = csv(t);
-    ALL=build(parsed);
-    localStorage.setItem('ma_cache',JSON.stringify({t:Date.now(),d:ALL,cols:SHEET_COLS}));
+    ALL=build(csv(t));
+    try{
+      localStorage.setItem('ma_cache',JSON.stringify({t:Date.now(),d:ALL,cols:SHEET_COLS}));
+    }catch(_){
+      // Jika kuota localStorage penuh, simpan versi ringkas tanpa kolom ekstra
+      try{
+        const slim=ALL.map(({_mk,_jj,Nama,Sekolah,Tingkat,Kelas,Gender,NIS,NISN,NIK,'No KK':NoKK,'Nama Arab':NamaArab,'Tempat Lahir':TempatLahir,'Tanggal Lahir':TanggalLahir,'Nama Ayah':NamaAyah,'NIK Ayah':NIKAyah,'TTL Ayah':TTLAyah,'Pendidikan Ayah':PendAyah,'Pekerjaan Ayah':PekAyah,'Penghasilan Ayah':PengAyah,'Nama Ibu':NamaIbu,'NIK Ibu':NIKIbu,'TTL Ibu':TTLIbu,'Pendidikan Ibu':PendIbu,'Pekerjaan Ibu':PekIbu,'Penghasilan Ibu':PengIbu,'Alamat':Alamat,'RT':RT,'RW':RW,'Kelurahan':Kelurahan,'Kecamatan':Kecamatan,'Kota':Kota,'Provinsi':Provinsi,'Kode Pos':KodePos,'Status Yatim':StatusYatim,'Jenis Yatim':JenisYatim,'Anak Pegawai':AnakPegawai,'Nama Pegawai':NamaPegawai})=>({_mk,_jj,Nama,Sekolah,Tingkat,Kelas,Gender,NIS,NISN,NIK,'No KK':NoKK,'Nama Arab':NamaArab,'Tempat Lahir':TempatLahir,'Tanggal Lahir':TanggalLahir,'Nama Ayah':NamaAyah,'NIK Ayah':NIKAyah,'TTL Ayah':TTLAyah,'Pendidikan Ayah':PendAyah,'Pekerjaan Ayah':PekAyah,'Penghasilan Ayah':PengAyah,'Nama Ibu':NamaIbu,'NIK Ibu':NIKIbu,'TTL Ibu':TTLIbu,'Pendidikan Ibu':PendIbu,'Pekerjaan Ibu':PekIbu,'Penghasilan Ibu':PengIbu,Alamat,RT,RW,Kelurahan,Kecamatan,Kota,Provinsi,'Kode Pos':KodePos,'Status Yatim':StatusYatim,'Jenis Yatim':JenisYatim,'Anak Pegawai':AnakPegawai,'Nama Pegawai':NamaPegawai}));
+        localStorage.setItem('ma_cache',JSON.stringify({t:Date.now(),d:slim,cols:SHEET_COLS}));
+      }catch(__){}
+    }
     await wp;
-    done('Diperbarui '+new Date().toLocaleString('id-ID')+' · '+ALL.length+' siswa berombel');
+    done('Diperbarui '+new Date().toLocaleString('id-ID'));
   }catch(e){
-    const c=localStorage.getItem('ma_cache');
-    if(c){
-      const j=JSON.parse(c);
-      ALL=j.d||[];
-      SHEET_COLS=j.cols||[];
-      ALL.forEach(x=>{
-        x['Nama']=(x['Nama']||'').toUpperCase();
-        x['NISN']=cleanID(x['NISN'],10);
-        x['NIK']=cleanID(x['NIK'],16);
-        x['No KK']=cleanID(x['No KK'],16);
-      });
-      await wp;
-      done('Offline · data tersimpan '+new Date(j.t).toLocaleString('id-ID'));
+    await wp;
+    if(ALL.length){
+      const c=localStorage.getItem('ma_cache');
+      const ts=c?new Date(JSON.parse(c).t).toLocaleString('id-ID'):'';
+      done('Offline · data tersimpan'+(ts?' '+ts:''));
     }else{
-      $('#sub').textContent='Gagal memuat data';
-      $('#app').innerHTML='<div class="msg">Gagal memuat data. Pastikan Google Sheet dibagikan "Siapa saja yang memiliki link (Viewer)" lalu tekan tombol Muat Ulang.</div>';
+      $('#app').innerHTML='<div class="msg">Gagal memuat data (koneksi lambat atau diblokir). Pastikan Google Sheet dibagikan "Siapa saja yang memiliki link (Viewer)" lalu tekan ikon Muat Ulang.</div>';
     }
   }
 }
 
 function setNav(){const n=$('nav');if(n)document.documentElement.style.setProperty('--navh',n.offsetHeight+'px')}
 function done(s){$('#sub').textContent=s;setNav();render()}
-const data=()=>mk=='Semua'?ALL:ALL.filter(x=>x._mk==mk);
+const data=()=>ALL.filter(x=>(mk=='Semua'||x._mk==mk)&&(jj=='Semua'||x._jj==jj));
 function group(list,fn){const m={};list.forEach(x=>{const k=fn(x)||'Tidak diisi';(m[k]=m[k]||[]).push(x)});return m}
 
-// ====== FITUR EXPORT DATA TERFILTER (CSV / EXCEL) ======
-function exportCSV(list, filename){
-  if(!list || !list.length) return;
-  const headers = [
-    'No', 'NIS', 'NISN', 'NIK Siswa', 'No KK', 'Nama Lengkap', 'Nama Arab',
-    'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir', 'Umur', 'Tingkat', 'Kelas / Rombel',
-    'Markaz', 'Wali Kelas', 'Anak Ke / Saudara',
-    'Nama Ayah', 'NIK Ayah', 'Tanggal Lahir Ayah', 'TTL Ayah', 'Pendidikan Ayah', 'Pekerjaan Ayah', 'Penghasilan Ayah',
-    'Nama Ibu', 'NIK Ibu', 'Tanggal Lahir Ibu', 'TTL Ibu', 'Pendidikan Ibu', 'Pekerjaan Ibu', 'Penghasilan Ibu',
-    'Status Yatim', 'Jenis Yatim', 'Anak Pegawai', 'Nama Pegawai',
-    'Alamat Lengkap', 'Kelurahan/Desa', 'Kecamatan', 'Kota/Kabupaten', 'Provinsi', 'Kode Pos'
-  ];
-
-  // Format angka panjang agar tidak berubah menjadi notasi ilmiah (E+) atau kehilangan angka 0 di Excel
-  const fmtExcelText = val => {
-    const v = String(val || '').trim();
-    if(!v) return '""';
-    return `"\t${v.replace(/"/g, '""')}"`;
-  };
-  const fmtStr = val => `"${String(val || '').replace(/"/g, '""')}"`;
-
-  const rows = list.map((x, idx) => [
-    idx + 1,
-    fmtExcelText(x['NIS']),
-    fmtExcelText(x['NISN']),
-    fmtExcelText(x['NIK']),
-    fmtExcelText(x['No KK']),
-    fmtStr(x['Nama']),
-    fmtStr(x['Nama Arab']),
-    fmtStr(x['Gender']),
-    fmtStr(title(x['Tempat Lahir'])),
-    fmtStr(tgl(x['Tanggal Lahir'])),
-    fmtStr(ageStr(x)),
-    fmtStr(x['Tingkat']),
-    fmtStr(x['Kelas']),
-    fmtStr(x._mk),
-    fmtStr(wali(x._mk, x['Kelas'])),
-    fmtStr(anak(x)),
-    fmtStr(x['Nama Ayah']),
-    fmtExcelText(x['NIK Ayah']),
-    fmtStr(x['Tanggal Lahir Ayah']),
-    fmtStr(x['TTL Ayah']),
-    fmtStr(x['Pendidikan Ayah']),
-    fmtStr(x['Pekerjaan Ayah']),
-    fmtStr(x['Penghasilan Ayah']),
-    fmtStr(x['Nama Ibu']),
-    fmtExcelText(x['NIK Ibu']),
-    fmtStr(x['Tanggal Lahir Ibu']),
-    fmtStr(x['TTL Ibu']),
-    fmtStr(x['Pendidikan Ibu']),
-    fmtStr(x['Pekerjaan Ibu']),
-    fmtStr(x['Penghasilan Ibu']),
-    fmtStr(x['Status Yatim']),
-    fmtStr(x['Jenis Yatim']),
-    fmtStr(x['Anak Pegawai']),
-    fmtStr(x['Nama Pegawai']),
-    fmtStr(alamat(x)),
-    fmtStr(title(x['Kelurahan'])),
-    fmtStr(title(x['Kecamatan'])),
-    fmtStr(title(x['Kota'])),
-    fmtStr(title(x['Provinsi'])),
-    fmtExcelText(x['Kode Pos'])
-  ].join(','));
-
-  const csvContent = '\uFEFF' + headers.map(fmtStr).join(',') + '\n' + rows.join('\n');
-  const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const safeName = (filename || 'Data_Siswa_MA').replace(/[^a-z0-9_\-]/gi, '_');
-  a.href = url;
-  a.download = `${safeName}_${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// ====== SORTING & KARTU STATISTIK ======
 const SORT={},CARDS={};
 const cmp=(a,b)=>(typeof a=='number'&&typeof b=='number')?a-b:String(a==null?'':a).localeCompare(String(b==null?'':b),'id',{numeric:true,sensitivity:'base'});
 const sid=t=>'c'+t.replace(/[^a-z0-9]/gi,'');
@@ -1090,6 +1063,7 @@ function bars(title,m,opt={}){
 }
 
 const markazCard=d=>xtab('Siswa per Markaz & Tingkat',d,x=>'Markaz '+x._mk,["Markaz Al-Ma'tuq",'Markaz Al-Zamil','Markaz Al-Afaf','Markaz Al-Bassam'],'Markaz');
+
 function eduRank(v){
   v=(v||'').toLowerCase().replace(/[.\s]+/g,' ').trim();
   if(/tidak (pernah )?sekolah|belum sekolah|tidak ada|tidak tamat/.test(v))return 0;
@@ -1109,29 +1083,33 @@ function eduRank(v){
 }
 
 function xtab(title,list,fn,order,first){
+  const TING=getTing();
   const g=group(list,fn);let e=Object.entries(g);
   e.sort(typeof order=='function'?(a,b)=>order(a[0])-order(b[0])||b[1].length-a[1].length:order?(a,b)=>(order.indexOf(a[0])<0?99:order.indexOf(a[0]))-(order.indexOf(b[0])<0?99:order.indexOf(b[0])):(a,b)=>b[1].length-a[1].length);
   e.push(['Total',list]);
   const n=window._xt.length,id=sid(title);
   window._xt.push({title,rows:e});
-  const val=(r,c)=>c==0?r[0]:c==4?r[1].length:r[1].filter(x=>x['Tingkat']==TING[c-1]).length;
+  const totCol=TING.length+1;
+  const val=(r,c)=>c==0?r[0]:c==totCol?r[1].length:r[1].filter(x=>x['Tingkat']==TING[c-1]).length;
   CARDS[id]=()=>{
     const s=SORT[id];let o=e.slice(0,-1).map((r,i)=>i);
     if(s)o.sort((a,b)=>s.d*cmp(val(e[a],s.c),val(e[b],s.c)));
     o.push(e.length-1);
     const c=(i,t,a)=>a.length?`<td class="c" onclick="openX(${n},${i},'${t}')">${a.length}</td>`:'<td class="z">-</td>';
-    return `<div class="card" id="${id}"><h3><span>${esc(title)}</span>${tab=='siswa'?cpBtn():''}</h3><div class="${e.length>10?'scroll':''}"><table class="xt"><tr>${th(id,0,first||'Kategori')}${TING.map((t,j)=>th(id,j+1,t)).join('')}${th(id,4,'Total')}</tr>${o.map(i=>{const r=e[i];return `<tr${r[0]=='Total'?' class="tot"':''}><td>${esc(r[0])}</td>${TING.map(t=>c(i,t,r[1].filter(x=>x['Tingkat']==t))).join('')}${c(i,'',r[1])}</tr>`}).join('')}</table></div></div>`;
+    return `<div class="card" id="${id}"><h3><span>${esc(title)}</span>${tab=='siswa'?cpBtn():''}</h3><div class="${e.length>10?'scroll':''}"><table class="xt"><tr>${th(id,0,first||'Kategori')}${TING.map((t,j)=>th(id,j+1,t)).join('')}${th(id,totCol,'Total')}</tr>${o.map(i=>{const r=e[i];return `<tr${r[0]=='Total'?' class="tot"':''}><td>${esc(r[0])}</td>${TING.map(t=>c(i,t,r[1].filter(x=>x['Tingkat']==t))).join('')}${c(i,'',r[1])}</tr>`}).join('')}</table></div></div>`;
   };
   return CARDS[id]();
 }
 function openX(id,i,t){const x=window._xt[id],r=x.rows[i];openM(x.title+' — '+(r[0]=='Total'?'Semua':r[0])+(t?' · Kelas '+t:''),r[1].filter(y=>!t||y['Tingkat']==t))}
 
 function kelasCard(d){
+  const TING=getTing();
   window._kd=d;
   const g=group(d,x=>x._mk+'|'+(x['Kelas']||'Tanpa kelas'));
   window._kg=g;
   const keys=Object.keys(g).sort((a,b)=>{const [ma,ka]=a.split('|'),[mb,kb]=b.split('|');return parseInt(ka)-parseInt(kb)||ka.localeCompare(kb)||ma.localeCompare(mb)});
-  window._kk=keys;const id='cKelas';
+  window._kk=keys;
+  const id='cKelas';
   const cnt=(a,f)=>a.filter(x=>x['Gender']==f).length;
   const kv=keys.map(k=>{const [m,c]=k.split('|'),b=g[k];return [c,wali(m,c),m,cnt(b,'L'),cnt(b,'P'),b.length]});
   const cell=(v,fn)=>v?`<td class="c" onclick="${fn}">${v}</td>`:'<td class="z">-</td>';
@@ -1144,7 +1122,11 @@ function kelasCard(d){
       if(s)idx.sort((a,b)=>s.d*cmp(kv[a][s.c],kv[b][s.c]));
       const a=d.filter(x=>x['Tingkat']==t);
       let rows='';
-      idx.forEach(i=>{const [c,w,m,l,p,n]=kv[i];const info=[mk=='Semua'?m:'',w].filter(Boolean).map(esc).join(' · ');rows+=`<tr><td><b>${esc(c)}</b>${info?`<small class="wk">${info}</small>`:''}</td>${cell(l,`openK(${i},'L')`)}${cell(p,`openK(${i},'P')`)}${cell(n,`openK(${i},'')`)}</tr>`});
+      idx.forEach(i=>{
+        const [c,w,m,l,p,n]=kv[i];
+        const info=[mk=='Semua'?m:'',w].filter(Boolean).map(esc).join(' · ');
+        rows+=`<tr><td><b>${esc(c)}</b>${info?`<small class="wk">${info}</small>`:''}</td>${cell(l,`openK(${i},'L')`)}${cell(p,`openK(${i},'P')`)}${cell(n,`openK(${i},'')`)}</tr>`;
+      });
       rows+=`<tr class="sub"><td>Jumlah</td>${cell(cnt(a,'L'),`openT('${t}','L')`)}${cell(cnt(a,'P'),`openT('${t}','P')`)}${cell(a.length,`openT('${t}','')`)}</tr>`;
       boxes+=`<div class="tb"><div class="tbh">Kelas ${esc(t)}<div class="tbh-r"><span>${idx.length} rombel · ${a.length} siswa</span>${cpBtn()}</div></div><table class="xt"><tr>${th(id,0,'Kelas')}${th(id,3,'L','L')}${th(id,4,'P','P')}${th(id,5,'Total')}</tr>${rows}</table></div>`;
     });
@@ -1155,6 +1137,7 @@ function kelasCard(d){
 }
 
 function jkTingkatCard(d){
+  const TING=getTing();
   const cnt=(a,f)=>a.filter(x=>x['Gender']==f).length;
   const ts=[...TING,...[...new Set(d.map(x=>x['Tingkat']))].filter(t=>t&&!TING.includes(t))].filter(t=>d.some(x=>x['Tingkat']==t));
   const cell=(v,fn)=>v?`<td class="c" onclick="${fn}">${v}</td>`:'<td class="z">-</td>';
@@ -1167,43 +1150,125 @@ const JK=f=>f=='L'?'Laki-laki':'Perempuan';
 function openK(i,f){const k=window._kk[i];openM('Kelas '+k.split('|')[1]+' · '+k.split('|')[0]+(f?' · '+JK(f):''),window._kg[k].filter(x=>!f||x['Gender']==f),wali(k.split('|')[0],k.split('|')[1])?'Wali Kelas: '+wali(k.split('|')[0],k.split('|')[1]):'')}
 function openT(t,f){openM((t?'Kelas '+t:'Semua Kelas')+(f?' · '+JK(f):''),window._kd.filter(x=>(!t||x['Tingkat']==t)&&(!f||x['Gender']==f)))}
 
-// ====== RENDER HALAMAN ======
+// ====== EXPORT DATA KE CSV (EXCEL FRIENDLY) ======
+function exportCSV(list, label){
+  if(!list || !list.length) return;
+  const headers = [
+    'No', 'NIS', 'NISN', 'NIK', 'No KK', 'Nama Lengkap', 'Nama Arab',
+    'Jenjang', 'Markaz', 'Tingkat', 'Kelas / Rombel', 'JK',
+    'Tempat Lahir', 'Tanggal Lahir', 'Umur', 'Anak Ke / Saudara',
+    'Nama Ayah', 'NIK Ayah', 'Tanggal Lahir Ayah', 'TTL Ayah', 'Pendidikan Ayah', 'Pekerjaan Ayah', 'Penghasilan Ayah',
+    'Nama Ibu', 'NIK Ibu', 'Tanggal Lahir Ibu', 'TTL Ibu', 'Pendidikan Ibu', 'Pekerjaan Ibu', 'Penghasilan Ibu',
+    'Alamat Lengkap', 'Kelurahan', 'Kecamatan', 'Kota/Kab', 'Provinsi', 'Kode Pos',
+    'Status Yatim', 'Jenis Yatim', 'Anak Pegawai', 'Nama Pegawai'
+  ];
+
+  // Tambahkan tanda ="..." untuk nomor identitas agar Excel tidak menghapus angka 0 di awal atau mengubahnya menjadi E+15
+  const asText = v => v ? `="${String(v).replace(/"/g,'""')}"` : '';
+  const escCsv = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+
+  const rows = list.map((x, idx) => [
+    idx + 1,
+    asText(x['NIS']),
+    asText(x['NISN']),
+    asText(x['NIK']),
+    asText(x['No KK']),
+    escCsv(x['Nama']),
+    escCsv(x['Nama Arab']),
+    escCsv(x._jj),
+    escCsv(x._mk),
+    escCsv(x['Tingkat']),
+    escCsv(x['Kelas']),
+    escCsv(x['Gender']),
+    escCsv(title(x['Tempat Lahir'])),
+    escCsv(tgl(x['Tanggal Lahir'])),
+    escCsv(ageStr(x)),
+    escCsv(anak(x)),
+    escCsv(x['Nama Ayah']),
+    asText(x['NIK Ayah']),
+    escCsv(x['Tanggal Lahir Ayah']),
+    escCsv(x['TTL Ayah']),
+    escCsv(x['Pendidikan Ayah']),
+    escCsv(x['Pekerjaan Ayah']),
+    escCsv(x['Penghasilan Ayah']),
+    escCsv(x['Nama Ibu']),
+    asText(x['NIK Ibu']),
+    escCsv(x['Tanggal Lahir Ibu']),
+    escCsv(x['TTL Ibu']),
+    escCsv(x['Pendidikan Ibu']),
+    escCsv(x['Pekerjaan Ibu']),
+    escCsv(x['Penghasilan Ibu']),
+    escCsv(alamat(x)),
+    escCsv(title(x['Kelurahan'])),
+    escCsv(title(x['Kecamatan'])),
+    escCsv(title(x['Kota'])),
+    escCsv(title(x['Provinsi'])),
+    asText(x['Kode Pos']),
+    escCsv(x['Status Yatim']),
+    escCsv(x['Jenis Yatim']),
+    escCsv(x['Anak Pegawai']),
+    escCsv(x['Nama Pegawai'])
+  ].join(','));
+
+  const csvContent = '\uFEFF' + [headers.map(escCsv).join(','), ...rows].join('\r\n');
+  const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const safeName = (label || 'Data_Siswa').replace(/[^a-z0-9_-]/gi, '_').replace(/_+/g,'_');
+  a.href = url;
+  a.download = `${safeName}_${TA.replace('/','-')}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 function render(){
+  const TING=getTing();
   $('#app').classList.toggle('wide',tab=='data'||(tab=='cari'&&cariMode=='full'));
   $('#app').classList.toggle('ortu-wide',tab=='ortu');
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t==tab));
   $('#cs').classList.toggle('on',tab=='cari');
+  $('#jjSel').disabled=tab=='cari';
   $('#mkSel').disabled=tab=='cari';
-  $('#chips .sel').style.opacity=tab=='cari'?.45:1;
+  document.querySelectorAll('#chips .sel').forEach(el=>el.style.opacity=tab=='cari'?.45:1);
   if(tab=='cari')return renderCari();
+
   if(tab=='data'){
-    const d0=data(),kl=[...new Set(d0.map(x=>x['Kelas']||'').filter(Boolean))].sort((a,b)=>parseInt(a)-parseInt(b)||a.localeCompare(b,'id',{numeric:true}));
+    const d0=data();
+    const kl=[...new Set(d0.map(x=>x['Kelas']||'').filter(Boolean))].sort((a,b)=>parseInt(a)-parseInt(b)||a.localeCompare(b,'id',{numeric:true}));
     if(kf!='Semua'&&!kl.includes(kf))kf='Semua';
     const dd=kf=='Semua'?d0:d0.filter(x=>(x['Kelas']||'')==kf);
     window._dl=dd.slice().sort((a,b)=>a['Nama'].localeCompare(b['Nama']));
-    const expLabel = `Data_Siswa_${mk}${kf!='Semua'?'_Kelas_'+kf:''}`;
+    const expLabel = `Siswa_${jj=='Semua'?'MA_MTs':jj}_${mk=='Semua'?'Semua_Markaz':mk}${kf!='Semua'?'_Kelas_'+kf:''}`;
+
     $('#app').innerHTML=`
       <div class="dtop">
         <h3>Data Siswa · ${dd.length} siswa</h3>
-        <label class="kf">Rombel
+        <label class="kf">Kelas
           <select onchange="kf=this.value;render()">
-            <option value="Semua">Semua rombel</option>
+            <option value="Semua">Semua kelas</option>
             ${kl.map(k=>`<option value="${esc(k)}"${k==kf?' selected':''}>${esc(k)}</option>`).join('')}
           </select>
         </label>
         <small>Klik nomor urut untuk detail lengkap &amp; data orang tua</small>
         <div class="acts">
-          <button class="abtn accent" onclick="exportCSV(window._dl, '${esc(expLabel)}')" title="Export data yang difilter ke CSV">${ICO.export}<span>Export Data (${dd.length})</span></button>
+          <button class="abtn accent" onclick="exportCSV(window._dl,'${esc(expLabel)}')" title="Export data terfilter ke Excel/CSV">
+            ${ICO.export}<span>Export Data</span>
+          </button>
         </div>
       </div>
-      <div class="lw dl" id="dlw"></div>`;
+      <div class="lw dl" id="dlw"></div>
+    `;
     drawDl();
     return;
   }
+
   const d=data();let h='';window._xt=[];
   const L=d.filter(x=>x['Gender']=='L'),P=d.filter(x=>x['Gender']=='P');
   window._k=[['Total Siswa',d],['Laki-laki',L],['Perempuan',P]];
-  h+=`<div class="kpi">${window._k.map((k,i)=>`<div class="k" onclick="openM('${k[0]}',window._k[${i}][1])"><b>${k[1].length}</b><span>${k[0]}</span></div>`).join('')}</div><div class="grid${tab=='ortu'?' ortu-grid':''}">`;
+  h+=`<div class="kpi">${window._k.map((k,i)=>`<div class="k" onclick="openM('${k[0]}',window._k[${i}][1])"><span>${k[0]}</span><b>${k[1].length}</b></div>`).join('')}</div><div class="grid${tab=='ortu'?' ortu-grid':''}">`;
+
   if(tab=='siswa'){
     h+=jkTingkatCard(d);
     h+=markazCard(d);
@@ -1247,16 +1312,18 @@ function openM(t,list,sub){
         <button class="abtn" onclick="closeM()" title="Kembali">${ICO.back}<span>Kembali</span></button>
         <div><h2>${esc(t)}</h2><small id="mc"></small></div>
         <div class="acts">
-          <button class="abtn accent" onclick="exportCSV(curList, curTitle)" title="Export daftar ini ke CSV">${ICO.export}<span>Export (${curList.length})</span></button>
+          <button class="abtn accent" onclick="exportCSV(curList, curTitle)" title="Export daftar ini ke Excel/CSV">
+            ${ICO.export}<span>Export Data</span>
+          </button>
         </div>
       </div>
       <div class="lw" id="ml"></div>
-    </div>`;
+    </div>
+  `;
   drawM();
   window.scrollTo(0,0);
 }
 
-// ====== FORMAT TANGGAL & ALAMAT ======
 const BLN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const title=t=>(t||'').toLowerCase().replace(/(^|[\s\-\/(])([a-z])/g,(m,a,b)=>a+b.toUpperCase());
@@ -1281,21 +1348,21 @@ function alamat(x){
   return p.join(', ');
 }
 
-// ====== PENCARIAN ======
-let qs='', lastSearchRes=[], cariMode='full';
+let qs='', cariMode='full';
 function setCariMode(m){
   cariMode=m;
-  $('#app').classList.toggle('wide',m=='full');
-  document.querySelectorAll('.srch-mode button').forEach(b=>b.classList.toggle('on',b.dataset.m==m));
+  $('#app').classList.toggle('wide',cariMode=='full');
+  document.querySelectorAll('.srch-mode button').forEach(b=>b.classList.toggle('on',b.dataset.m==cariMode));
   drawCari();
 }
 function renderCari(){
+  $('#app').classList.toggle('wide',cariMode=='full');
   $('#app').innerHTML=`
     <div class="srch">
       <div class="srch-top">
         <div class="srch-box">
           ${ICO.search}
-          <input id="sq" type="search" placeholder="Ketik nama, NIS, NISN, NIK, desa, kec, atau kab…" value="${esc(qs)}" autocomplete="off">
+          <input id="sq" type="search" placeholder="Ketik nama, NIS, NISN, atau NIK siswa…" value="${esc(qs)}" autocomplete="off">
         </div>
         <div class="srch-mode" role="group" aria-label="Mode tampilan pencarian">
           <button type="button" data-m="full" class="${cariMode=='full'?'on':''}" onclick="setCariMode('full')">Semua Data (Full)</button>
@@ -1303,7 +1370,8 @@ function renderCari(){
         </div>
       </div>
       <div id="sr"></div>
-    </div>`;
+    </div>
+  `;
   const i=$('#sq');
   i.oninput=()=>{qs=i.value;drawCari()};
   drawCari();
@@ -1314,98 +1382,111 @@ function drawCari(){
   const q=qs.trim().toLowerCase(),box=$('#sr');
   if(!box)return;
   if(q.length<2){
-    lastSearchRes=[];
-    box.innerHTML=`<div class="msg">Ketik minimal 2 karakter untuk mencari di antara ${ALL.length} siswa.</div>`;
+    box.innerHTML=`<div class="msg">Ketik minimal 2 karakter untuk mencari di antara ${ALL.length} siswa ber-rombel.</div>`;
     return;
   }
-  const a=ALL.filter(x=>[x['Nama'],x['Nama Arab'],x['NIS'],x['NISN'],x['NIK'],x['Kelurahan'],x['Kecamatan'],x['Kota']].join(' ').toLowerCase().includes(q)).sort((p,r)=>p['Nama'].localeCompare(r['Nama']));
-  lastSearchRes=a;
-  const expBtn = a.length ? `<button class="abtn accent" onclick="exportCSV(lastSearchRes, 'Hasil_Pencarian_${esc(qs.trim())}')" title="Export hasil pencarian">${ICO.export}<span>Export (${a.length})</span></button>` : '';
-  box.innerHTML=`<div class="cnt"><span>${a.length} hasil ditemukan${a.length>30?' · menampilkan 30 pertama, persempit pencarian':''}</span>${expBtn}</div>`+a.slice(0,30).map(cardS).join('');
+  const a=ALL.filter(x=>[x['Nama'],x['Nama Arab'],x['NIS'],x['NISN'],x['NIK']].join(' ').toLowerCase().includes(q)).sort((p,r)=>p['Nama'].localeCompare(r['Nama']));
+  window._srList=a;
+  const maxShow=cariMode=='full'?50:100;
+  const expBtn=a.length?`<button class="abtn accent" onclick="exportCSV(window._srList,'Hasil_Pencarian_${cariMode=='wilayah'?'NISN':'Full'}')">${ICO.export}<span>Export (${a.length})</span></button>`:'';
+  box.innerHTML=`<div class="cnt"><span>${a.length} hasil ditemukan${a.length>maxShow?` · menampilkan ${maxShow} pertama`:''}</span>${expBtn}</div>`+a.slice(0,maxShow).map(cardS).join('');
 }
 
 function cardS(x){
-  const f=(l,v,c)=>`<div class="f${c?' '+c:''}"><span>${l}</span><b${c=='w'?' dir="rtl"':''}>${esc(v)||'-'}</b></div>`;
-  if(cariMode=='wilayah'){
-    const k=(x['Kota']||'').trim();
-    const isKota=/^kota\b/i.test(k);
-    const wParts=[];
-    if(k) wParts.push(isKota || /^(kab\.?|kabupaten)\b/i.test(k) ? title(k) : 'Kab. ' + title(k));
-    if(x['Kecamatan']) wParts.push('Kec. ' + title(x['Kecamatan']));
-    if(x['Kelurahan']) wParts.push((!k ? 'Desa/Kel. ' : isKota ? 'Kel. ' : 'Desa ') + title(x['Kelurahan']));
-    return `
-      <div class="sc" style="max-width:920px;margin:0 auto 14px">
-        <div class="sh">
-          <h4>${esc(x['Nama'])}</h4>
-          <span class="bd">Kelas ${esc(x['Kelas'])} · Markaz ${x._mk}</span>
-        </div>
-        <div class="fg">
-          ${f('NISN', x['NISN'])}
-          ${f('NIK', x['NIK'])}
-          ${f('Tempat, Tanggal Lahir', ttl(x))}
-          ${f('Nama Ibu', x['Nama Ibu'])}
-          ${f('Alamat Wilayah', wParts.join(', '), 'full')}
-        </div>
-      </div>`;
-  }
+  const f=(l,v,c)=>`<div class="f${c?' '+c:''}"><span>${esc(l)}</span><b${c=='w'?' dir="rtl"':''}>${esc(v)||'-'}</b></div>`;
+  const badge=`${x._jj} · ${x['Kelas']?'Kelas '+esc(x['Kelas'])+' · ':''}Markaz ${x._mk}`;
 
-  // Kategorisasi semua kolom dari Google Sheet pada mode Semua Data (Full)
-  const allKeys = SHEET_COLS.length ? SHEET_COLS : Object.keys(x).filter(k => !k.startsWith('_'));
-  const used = new Set();
-  const pick = (rx) => allKeys.filter(k => {
-    if(used.has(k) || k.startsWith('_')) return false;
-    if(rx.test(k)){ used.add(k); return true; }
-    return false;
-  });
-
-  const catIdentitas = pick(/^(nis|nisn|nik|no\.?\s*kk|kartu keluarga|nama|gender|jenis kelamin|tempat lahir|tanggal lahir|anak ke|jml saudara|jumlah saudara|agama|kewarganegaraan|no\.?\s*hp|telepon|email)/i);
-  const catAyah = pick(/ayah/i);
-  const catIbu = pick(/ibu/i);
-  const catWali = pick(/wali/i);
-  const catAlamat = pick(/^(alamat|rt|rw|kelurahan|desa|kecamatan|kota|kabupaten|provinsi|kode pos|lintang|bujur|jarak|transportasi)/i);
-  const catAkademik = allKeys.filter(k => !used.has(k) && !k.startsWith('_'));
-
-  const renderGroup = (cols) => cols.map(k => {
-    let val = x[k];
-    if(/tanggal lahir/i.test(k) && val) val = tgl(val);
-    const isArab = /arab/i.test(k);
-    return f(k, val, isArab ? 'w' : '');
-  }).join('');
-
-  return `
-    <div class="sc">
-      <div class="sh">
-        <h4>${esc(x['Nama'])}</h4>
-        <span class="bd">Kelas ${esc(x['Kelas'])} · Markaz ${x._mk}${wali(x._mk, x['Kelas']) ? ' · Wali: ' + esc(wali(x._mk, x['Kelas'])) : ''}</span>
-      </div>
+  // Mode Pencarian NISN: Identitas utama, TTL, Nama Ibu & Alamat Wilayah gabungan (Kota/Kab, Kec, Kel/Desa)
+  if(cariMode==='wilayah'){
+    const rawKota=(x['Kota']||'').trim();
+    const isKota=/^kota\b/i.test(rawKota);
+    const kotaStr=rawKota?(isKota?title(rawKota):'Kab. '+title(rawKota)):'';
+    const kecStr=x['Kecamatan']?'Kec. '+title(x['Kecamatan']):'';
+    const kelStr=x['Kelurahan']?(isKota?'Kel. ':'Desa ')+title(x['Kelurahan']):'';
+    const wilGabung=[kotaStr,kecStr,kelStr].filter(Boolean).join(', ');
+    return `<div class="sc">
+      <div class="sh"><h4>${esc(x['Nama'])}</h4><span class="bd">${badge}</span></div>
       <div class="fg">
-        <div class="dg-sec">Identitas Siswa</div>
-        ${renderGroup(catIdentitas)}
-        ${f('Umur Saat Ini', ageStr(x))}
-
-        <div class="dg-sec">Akademik &amp; Keterangan Lainnya</div>
-        ${renderGroup(catAkademik)}
-
-        <div class="dg-sec">Data Ayah</div>
-        ${renderGroup(catAyah)}
-        ${!catAyah.some(k=>/nik/i.test(k)) ? f('NIK Ayah', x['NIK Ayah']) : ''}
-        ${!catAyah.some(k=>/ttl/i.test(k)) ? f('TTL Ayah', x['TTL Ayah']) : ''}
-
-        <div class="dg-sec">Data Ibu</div>
-        ${renderGroup(catIbu)}
-        ${!catIbu.some(k=>/nik/i.test(k)) ? f('NIK Ibu', x['NIK Ibu']) : ''}
-        ${!catIbu.some(k=>/ttl/i.test(k)) ? f('TTL Ibu', x['TTL Ibu']) : ''}
-
-        ${catWali.length ? `<div class="dg-sec">Data Wali</div>${renderGroup(catWali)}` : ''}
-
-        <div class="dg-sec">Alamat &amp; Wilayah</div>
-        ${f('Alamat Lengkap Gabungan', alamat(x), 'full')}
-        ${renderGroup(catAlamat)}
+        ${f('NISN',x['NISN'])}
+        ${f('NIK',x['NIK'])}
+        ${f('Tempat, Tanggal Lahir',ttl(x))}
+        ${f('Nama Ibu',x['Nama Ibu'])}
+        ${f('Alamat Wilayah (Kota/Kab, Kec, Kel/Desa)',wilGabung,'full')}
       </div>
     </div>`;
+  }
+
+  // Mode Full Page: Menampilkan seluruh kolom data Google Sheet dikelompokkan per kategori + Alamat Lengkap Gabungan
+  const cols=SHEET_COLS.length?SHEET_COLS:Object.keys(x).filter(k=>!k.startsWith('_'));
+  const groups={
+    siswa:[],
+    akademik:[],
+    ayah:[],
+    ibu:[],
+    wali:[],
+    alamat:[]
+  };
+  const used=new Set();
+  const pushItem=(cat,label,val,cls)=>{
+    used.add(label);
+    const disp=/tanggal lahir|tgl lahir/i.test(label)?tgl(val):val;
+    groups[cat].push(f(label,disp,cls));
+  };
+
+  // Pastikan field utama identitas & orang tua yang sudah dinormalisasi masuk rapi
+  const priorityMap=[
+    ['siswa','NIS',x['NIS']],
+    ['siswa','NISN',x['NISN']],
+    ['siswa','NIK',x['NIK']],
+    ['siswa','No KK',x['No KK']],
+    ['siswa','Nama',x['Nama']],
+    ['siswa','Nama Arab',x['Nama Arab'],'w'],
+    ['siswa','Tempat, Tanggal Lahir',ttl(x)],
+    ['ayah','Nama Ayah',x['Nama Ayah']],
+    ['ayah','NIK Ayah',x['NIK Ayah']],
+    ['ayah','Tanggal Lahir Ayah',x['Tanggal Lahir Ayah']],
+    ['ayah','TTL Ayah',x['TTL Ayah']],
+    ['ayah','Pendidikan Ayah',x['Pendidikan Ayah']],
+    ['ayah','Pekerjaan Ayah',x['Pekerjaan Ayah']],
+    ['ayah','Penghasilan Ayah',x['Penghasilan Ayah']],
+    ['ibu','Nama Ibu',x['Nama Ibu']],
+    ['ibu','NIK Ibu',x['NIK Ibu']],
+    ['ibu','Tanggal Lahir Ibu',x['Tanggal Lahir Ibu']],
+    ['ibu','TTL Ibu',x['TTL Ibu']],
+    ['ibu','Pendidikan Ibu',x['Pendidikan Ibu']],
+    ['ibu','Pekerjaan Ibu',x['Pekerjaan Ibu']],
+    ['ibu','Penghasilan Ibu',x['Penghasilan Ibu']]
+  ];
+  priorityMap.forEach(([cat,lbl,val,cls])=>pushItem(cat,lbl,val,cls));
+  pushItem('alamat','Alamat Lengkap (Gabungan)',alamat(x),'full');
+
+  // Distribusikan sisa seluruh kolom dari Google Sheet ke kategori yang sesuai
+  cols.forEach(k=>{
+    if(used.has(k)||k==='KK'||k==='No. KK'||k==='Nomor KK')return;
+    const kl=k.toLowerCase();
+    const isArab=/arab/i.test(k)?'w':'';
+    if(/ayah/.test(kl))pushItem('ayah',k,x[k],isArab);
+    else if(/ibu/.test(kl))pushItem('ibu',k,x[k],isArab);
+    else if(/wali/.test(kl)&&!/wali kelas/.test(kl))pushItem('wali',k,x[k],isArab);
+    else if(/alamat|rt|rw|kelurahan|desa|kecamatan|kota|kab|provinsi|kode pos|tinggal|jarak|transport/.test(kl))pushItem('alamat',k,x[k],isArab);
+    else if(/sekolah|markaz|tahun|status|kelas|rombel|tingkat|yatim|pegawai|asal|ijazah|skhun|un|lulus|hobi|cita|prestasi|beasiswa|kip|pkh|kks/.test(kl))pushItem('akademik',k,x[k],isArab);
+    else pushItem('siswa',k,x[k],isArab);
+  });
+
+  const sec=(title,arr)=>arr.length?`<div class="dg-sec">${title}</div>${arr.join('')}`:'';
+  return `<div class="sc">
+    <div class="sh"><h4>${esc(x['Nama'])}</h4><span class="bd">${badge}</span></div>
+    <div class="fg">
+      ${sec('Identitas Siswa',groups.siswa)}
+      ${sec('Akademik &amp; Keterangan Lainnya',groups.akademik)}
+      ${sec('Data Ayah',groups.ayah)}
+      ${sec('Data Ibu',groups.ibu)}
+      ${sec('Data Wali',groups.wali)}
+      ${sec('Alamat &amp; Wilayah',groups.alamat)}
+    </div>
+  </div>`;
 }
 
-// ====== DAFTAR SISWA & DETAIL EXPAND ======
 const dkey=x=>{const m=/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/.exec(x['Tanggal Lahir']||'');return m?m[3]+m[2].padStart(2,'0')+m[1].padStart(2,'0'):(x['Tanggal Lahir']||'')};
 function dob(x){
   const v=(x['Tanggal Lahir']||'').trim();let r,y,m,d;
@@ -1438,11 +1519,7 @@ function lstHTML(id,list){
   const s=SORT[id];let a=list;
   if(s&&cols[s.c]&&cols[s.c][1]){
     const f=cols[s.c][1];
-    a=list.slice().sort((p,q)=>{
-      const A=f(p),B=f(q),ea=A===''||A==null,eb=B===''||B==null;
-      if(ea&&!eb)return 1;if(!ea&&eb)return -1;
-      return s.d*cmp(A,B);
-    });
+    a=list.slice().sort((p,q)=>{const A=f(p),B=f(q),ea=A===''||A==null,eb=B===''||B==null;if(ea&&!eb)return 1;if(!ea&&eb)return -1;return s.d*cmp(A,B)});
   }
   const cur=s?s.c:2,dir=s?s.d:1;
   const bar=`<div class="sortbar"><label>Urutkan <select onchange="srtSel('${id}',this.value)">${cols.slice(1).map((c,i)=>`<option value="${i+1}"${cur==i+1?' selected':''}>${c[0]}</option>`).join('')}</select></label><button onclick="srtDir('${id}')" aria-label="Balik urutan">${dir>0?'▲ A–Z':'▼ Z–A'}</button></div>`;
@@ -1452,57 +1529,61 @@ function lstHTML(id,list){
     const k=full?dk(x):'',op=full&&OPEN.has(k);
     const main=`<tr${full?` class="mr${op?' open':''}" data-k="${esc(k)}"`:''}><td data-l="No"${full?` class="nt" onclick="tgr(this.parentNode)" title="Klik untuk lihat detail"`:''}>${full?`<span class="tg-ico">${ICO.chevRight}</span> `:''}${n+1}</td>${cols.slice(1).map(c=>c[3](x)).join('')}</tr>`;
     if(!full)return main;
-    return main+`
-      <tr class="dr${op?' open':''}">
-        <td colspan="${cols.length}">
-          <div class="dg">
-            <div class="dg-sec">Identitas Siswa</div>
-            ${f('NIS',x['NIS'])}
-            ${f('NISN',x['NISN'])}
-            ${f('NIK Siswa',x['NIK'])}
-            ${f('No KK',x['No KK'])}
-            ${f('Anak Ke / Jml Saudara',anak(x))}
-            ${f('Nama Arab',x['Nama Arab'],'w')}
-
-            <div class="dg-sec">Data Ayah</div>
-            ${f('Nama Ayah',x['Nama Ayah'])}
-            ${f('NIK Ayah',x['NIK Ayah'])}
-            ${f('Tanggal Lahir Ayah',x['Tanggal Lahir Ayah'])}
-            ${f('TTL Ayah',x['TTL Ayah'])}
-            ${f('Pendidikan Ayah',x['Pendidikan Ayah'])}
-            ${f('Pekerjaan Ayah',x['Pekerjaan Ayah'])}
-            ${f('Penghasilan Ayah',x['Penghasilan Ayah'])}
-
-            <div class="dg-sec">Data Ibu</div>
-            ${f('Nama Ibu',x['Nama Ibu'])}
-            ${f('NIK Ibu',x['NIK Ibu'])}
-            ${f('Tanggal Lahir Ibu',x['Tanggal Lahir Ibu'])}
-            ${f('TTL Ibu',x['TTL Ibu'])}
-            ${f('Pendidikan Ibu',x['Pendidikan Ibu'])}
-            ${f('Pekerjaan Ibu',x['Pekerjaan Ibu'])}
-            ${f('Penghasilan Ibu',x['Penghasilan Ibu'])}
-
-            <div class="dg-sec">Domisili</div>
-            ${f('Alamat Lengkap',alamat(x),'full')}
-          </div>
-        </td>
-      </tr>`;
+    return main+`<tr class="dr${op?' open':''}"><td colspan="${cols.length}">
+      <div class="dg">
+        <div class="dg-sec">Identitas Siswa &amp; Keluarga</div>
+        ${f('NIS',x['NIS'])}
+        ${f('NISN',x['NISN'])}
+        ${f('NIK',x['NIK'])}
+        ${f('No KK',x['No KK'])}
+        ${f('Anak Ke / Jml Saudara',anak(x))}
+        ${f('Nama Arab',x['Nama Arab'],'w')}
+        <div class="dg-sec">Data Ayah</div>
+        ${f('Nama Ayah',x['Nama Ayah'])}
+        ${f('NIK Ayah',x['NIK Ayah'])}
+        ${f('Tanggal Lahir Ayah',x['Tanggal Lahir Ayah'])}
+        ${f('TTL Ayah',x['TTL Ayah'])}
+        ${f('Pendidikan Ayah',x['Pendidikan Ayah'])}
+        ${f('Pekerjaan Ayah',x['Pekerjaan Ayah'])}
+        ${f('Penghasilan Ayah',x['Penghasilan Ayah'])}
+        <div class="dg-sec">Data Ibu</div>
+        ${f('Nama Ibu',x['Nama Ibu'])}
+        ${f('NIK Ibu',x['NIK Ibu'])}
+        ${f('Tanggal Lahir Ibu',x['Tanggal Lahir Ibu'])}
+        ${f('TTL Ibu',x['TTL Ibu'])}
+        ${f('Pendidikan Ibu',x['Pendidikan Ibu'])}
+        ${f('Pekerjaan Ibu',x['Pekerjaan Ibu'])}
+        ${f('Penghasilan Ibu',x['Penghasilan Ibu'])}
+        <div class="dg-sec">Alamat Tempat Tinggal</div>
+        ${f('Alamat Lengkap',alamat(x),'full')}
+      </div>
+    </td></tr>`;
   };
   return bar+`<table class="lst"><tr>${cols.map((c,i)=>i?th(id,i,c[0],c[2]):'<th>No</th>').join('')}</tr>${a.map(rowH).join('')}</table>`;
 }
 
 let OPEN=new Set();
-const dk=x=>x['ID']||x['NISN']||x['NIK']||x['Nama'];
-function tgr(tr){const k=tr.dataset.k,o=!tr.classList.contains('open');tr.classList.toggle('open',o);tr.nextElementSibling.classList.toggle('open',o);o?OPEN.add(k):OPEN.delete(k)}
+const dk=x=>x['ID']||x['NISN']||x['Nama'];
+function tgr(tr){
+  const k=tr.dataset.k,o=!tr.classList.contains('open');
+  tr.classList.toggle('open',o);
+  tr.nextElementSibling.classList.toggle('open',o);
+  o?OPEN.add(k):OPEN.delete(k);
+}
 function drawM(){$('#mc').textContent=curList.length+' siswa'+(curSub?' · '+curSub:'');$('#ml').innerHTML=lstHTML('lst',curList)}
 function drawDl(){const e=$('#dlw');if(e)e.innerHTML=lstHTML('dl',window._dl)}
 function closeM(){render();window.scrollTo(0,lastY)}
 
-// ====== INISIALISASI KONTROL & EVENT ======
 let prevTab='siswa';
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
 
 $('#chips').innerHTML=`
+  <label class="sel">
+    <span>Jenjang</span>
+    <select id="jjSel">
+      ${[['Semua','Semua Jenjang'],['MA','MA'],['MTs','MTs']].map(j=>`<option value="${j[0]}">${j[1]}</option>`).join('')}
+    </select>
+  </label>
   <label class="sel">
     <span>Markaz</span>
     <select id="mkSel">
@@ -1513,9 +1594,10 @@ $('#chips').innerHTML=`
   <button class="ibtn icon-only ref" id="rf" aria-label="Muat ulang data" title="Muat ulang data dari Google Sheet">${ICO.refresh}</button>
 `;
 
+$('#jjSel').onchange=e=>{jj=e.target.value;render()};
 $('#mkSel').onchange=e=>{mk=e.target.value;render()};
 $('#cs').onclick=()=>{if(tab=='cari')tab=prevTab;else{prevTab=tab;tab='cari'}render()};
-$('#rf').onclick=load;
+$('#rf').onclick=()=>load(true);
 
 // PWA Install Prompt
 let dp=null;
@@ -1523,18 +1605,21 @@ const standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').ma
 function showIns(html){
   let x=0;try{x=localStorage.getItem('ins_x')}catch(_){}
   if(standalone||x)return;
-  const e=$('#ins');e.innerHTML=html+'<button class="ix" aria-label="Tutup">×</button>';e.hidden=false;
+  const e=$('#ins');
+  e.innerHTML=html+'<button class="ix" aria-label="Tutup">×</button>';
+  e.hidden=false;
   e.querySelector('.ix').onclick=()=>{e.hidden=true;try{localStorage.setItem('ins_x','1')}catch(_){}};
-  const b=e.querySelector('.ib');if(b)b.onclick=async()=>{dp.prompt();await dp.userChoice;dp=null;e.hidden=true};
+  const b=e.querySelector('.ib');
+  if(b)b.onclick=async()=>{dp.prompt();await dp.userChoice;dp=null;e.hidden=true};
 }
-window.addEventListener('beforeinstallprompt',ev=>{ev.preventDefault();dp=ev;showIns('<span>Pasang aplikasi ini di layar utama perangkat Anda.</span><button class="ib">Pasang</button>')});
+window.addEventListener('beforeinstallprompt',ev=>{ev.preventDefault();dp=ev;showIns('<span>Pasang aplikasi ini di layar utama HP Anda.</span><button class="ib">Pasang</button>')});
 window.addEventListener('appinstalled',()=>{$('#ins').hidden=true});
 if(/iphone|ipad|ipod/i.test(navigator.userAgent))showIns('<span>Untuk memasang: ketuk ikon <b>Bagikan</b>, lalu pilih <b>Tambahkan ke Layar Utama</b>.</span>');
 
 setNav();
 addEventListener('resize',setNav);
 load();
-if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
 </script>
 </body>
 </html>
