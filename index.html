@@ -407,8 +407,9 @@ small.wk{display:block;font-size:12.5px;font-weight:400;color:var(--mut);margin-
 }
 
 /* Field Detail & Pencarian */
-.srch{max-width:920px;margin:0 auto}
-.srch-box{position:relative;display:flex;align-items:center}
+.srch{max-width:100%;margin:0 auto}
+.srch-top{max-width:920px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.srch-box{position:relative;display:flex;align-items:center;flex:1;min-width:240px}
 .srch-box svg{position:absolute;left:16px;width:19px;height:19px;stroke:var(--mut);stroke-width:2;fill:none;pointer-events:none}
 .srch input{
   width:100%;
@@ -422,6 +423,9 @@ small.wk{display:block;font-size:12.5px;font-weight:400;color:var(--mut);margin-
   color:var(--ink);
 }
 .srch input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(180,83,9,.15)}
+.srch-mode{display:flex;background:#fff;border:1px solid var(--line);border-radius:12px;padding:4px;box-shadow:var(--sh);gap:4px}
+.srch-mode button{border:0;background:transparent;padding:8px 13px;border-radius:8px;font:700 13.5px var(--font-narrow);color:var(--mut);cursor:pointer;transition:.15s;white-space:nowrap}
+.srch-mode button.on{background:var(--b1);color:#fff}
 .cnt{margin:14px 2px 10px;color:var(--mut);font-size:14px;font-weight:600;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
 
 .sc{
@@ -562,531 +566,41 @@ const TA='2026/2027';
 const URL_CSV=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
 const ORDER_INC=['Tidak Ada','Kurang dari 500.000','500.000 - 1.000.000','1.000.001 - 2.000.000','2.000.001 - 3.000.000','3.000.001 - 5.000.000','Lebih dari 5.000.000'];
 const TING=['X','XI','XII'];
-let ALL=[],mk='Semua',tab='siswa',curList=[],kf='Semua';
+let ALL=[],SHEET_COLS=[],mk='Semua',tab='siswa',curList=[],kf='Semua';
 const $=s=>document.querySelector(s);
-
-// ====== PEMBERSIH ANGKA IDENTITAS (NISN, NIK, KK) ======
-function cleanId(val, padLen) {
-  let s = String(val || '').trim();
-  if (!s) return '';
-  // Hilangkan tanda kutip tunggal di awal (sering dipakai di Excel/Sheets)
-  s = s.replace(/^'+/, '');
-  // Jika Google Sheets / Excel mengubahnya menjadi notasi ilmiah (misal: 3.20212E+15 atau 3,20212E+15)
-  if (/^[0-9.,]+[eE][+-]?\d+$/.test(s)) {
-    const num = Number(s.replace(',', '.'));
-    if (!isNaN(num)) {
-      s = num.toLocaleString('fullwide', { useGrouping: false });
-    }
-  }
-  // Ambil digit saja jika formatnya tercampur spasi/simbol +, namun jaga angka 0 di awal
-  const digits = s.replace(/\D/g, '');
-  if (!digits) return s;
-  if (padLen && digits.length < padLen) {
-    return digits.padStart(padLen, '0');
-  }
-  return digits;
-}
-
-// Cari kolom secara fleksibel berdasarkan pola nama header
-function findCol(headers, regexes) {
-  for (const rx of regexes) {
-    const idx = headers.findIndex(h => rx.test(h));
-    if (idx >= 0) return idx;
-  }
-  return -1;
-}
-
-function csv(t){
-  const r=[];let w=[],f='',q=false;
-  for(let i=0;i<t.length;i++){
-    const c=t[i];
-    if(q){
-      if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}
-      else f+=c;
-    }else if(c=='"')q=true;
-    else if(c==','){w.push(f);f='';}
-    else if(c=='\n'){w.push(f);r.push(w);w=[];f=''}
-    else if(c!='\r')f+=c;
-  }
-  if(f||w.length){w.push(f);r.push(w)}
-  return r;
-}
-
+// ... existing code ... -->
 function build(rows){
   if(!rows || !rows.length) return [];
   const h = rows[0].map(x=>x.trim());
+  SHEET_COLS = h.filter(Boolean);
   
   // Deteksi indeks kolom spesifik
   const ikk = findCol(h, [/^(no\.?\s*)?(kk|kartu keluarga)$/i, /nomor\s*(kk|kartu keluarga)/i]);
-  const inik = findCol(h, [/^nik$/i, /^nik\s*siswa$/i, /^no\.?\s*nik$/i]);
-  const inisn = findCol(h, [/^nisn$/i]);
-  
-  // Kolom NIK & TTL Orang Tua
-  const iNikAyah = findCol(h, [/nik\s*ayah/i, /no\.?\s*nik\s*ayah/i]);
-  const iTtlAyah = findCol(h, [/^ttl\s*ayah$/i]);
-  const iTmpAyah = findCol(h, [/tempat\s*lahir\s*ayah/i, /tmp\.?\s*lahir\s*ayah/i]);
-  const iTglAyah = findCol(h, [/tanggal\s*lahir\s*ayah/i, /tgl\.?\s*lahir\s*ayah/i, /tgl\.?\s*ayah/i]);
-
-  const iNikIbu = findCol(h, [/nik\s*ibu/i, /no\.?\s*nik\s*ibu/i]);
-  const iTtlIbu = findCol(h, [/^ttl\s*ibu$/i]);
-  const iTmpIbu = findCol(h, [/tempat\s*lahir\s*ibu/i, /tmp\.?\s*lahir\s*ibu/i]);
-  const iTglIbu = findCol(h, [/tanggal\s*lahir\s*ibu/i, /tgl\.?\s*lahir\s*ibu/i, /tgl\.?\s*ibu/i]);
-
-  return rows.slice(1).map(r=>{
-    const o={};
-    h.forEach((k,i)=>o[k]=(r[i]||'').trim());
-
-    // Perbaikan NISN (10 digit, mempertahankan 0 di awal)
-    const rawNisn = inisn >= 0 ? r[inisn] : (o['NISN'] || '');
-    o['NISN'] = cleanId(rawNisn, 10);
-
-    // Perbaikan NIK & No KK (16 digit, bebas simbol + / notasi ilmiah, mempertahankan 0 di awal)
-    const rawNik = inik >= 0 ? r[inik] : (o['NIK'] || '');
-    o['NIK'] = cleanId(rawNik, 16);
-
-    const rawKk = ikk >= 0 ? r[ikk] : (o['No KK'] || '');
-    o['No KK'] = cleanId(rawKk, 16);
-
-    // NIK & TTL Ayah
-    const rawNikAyah = iNikAyah >= 0 ? r[iNikAyah] : (o['NIK Ayah'] || '');
-    o['NIK Ayah'] = cleanId(rawNikAyah, 16);
-    const tmpA = iTmpAyah >= 0 ? (r[iTmpAyah]||'').trim() : (o['Tempat Lahir Ayah']||'');
-    const tglA = iTglAyah >= 0 ? (r[iTglAyah]||'').trim() : (o['Tanggal Lahir Ayah']||'');
-    o['Tanggal Lahir Ayah'] = tgl(tglA);
-    if (iTtlAyah >= 0 && r[iTtlAyah]) {
-      o['TTL Ayah'] = r[iTtlAyah].trim();
-    } else {
-      o['TTL Ayah'] = [title(tmpA), o['Tanggal Lahir Ayah']].filter(Boolean).join(', ');
-    }
-
-    // NIK & TTL Ibu
-    const rawNikIbu = iNikIbu >= 0 ? r[iNikIbu] : (o['NIK Ibu'] || '');
-    o['NIK Ibu'] = cleanId(rawNikIbu, 16);
-    const tmpI = iTmpIbu >= 0 ? (r[iTmpIbu]||'').trim() : (o['Tempat Lahir Ibu']||'');
-    const tglI = iTglIbu >= 0 ? (r[iTglIbu]||'').trim() : (o['Tanggal Lahir Ibu']||'');
-    o['Tanggal Lahir Ibu'] = tgl(tglI);
-    if (iTtlIbu >= 0 && r[iTtlIbu]) {
-      o['TTL Ibu'] = r[iTtlIbu].trim();
-    } else {
-      o['TTL Ibu'] = [title(tmpI), o['Tanggal Lahir Ibu']].filter(Boolean).join(', ');
-    }
-
-    return o;
-  }).filter(o=>o['Nama']).map(o=>{
-    o['Nama']=o['Nama'].toUpperCase();
-    const s=(o['Sekolah']||'').toLowerCase().replace(/[’`]/g,"'");
-    if(!/^ma\s/.test(s)||!s.includes('tuq'))return null;
-    o._mk=s.includes('zamil')?'Al-Zamil':s.includes('bassam')?'Al-Bassam':s.includes('afaf')?'Al-Afaf':"Al-Ma'tuq";
-    if(o._mk=='Al-Bassam'&&o['Tingkat']!='XII')return null;
-    if(o['Tahun Ajaran']&&o['Tahun Ajaran']!=TA)return null;
-    if(o['Status']&&o['Status']!='Aktif')return null;
-    
-    // WAJIB PUNYA ROMBEL / KELAS
-    const kelasVal = (o['Kelas'] || o['Rombel'] || '').trim();
-    if (!kelasVal || kelasVal === '-' || /^tanpa\s*kelas$/i.test(kelasVal)) return null;
-    o['Kelas'] = kelasVal;
-
-    return o;
-  }).filter(Boolean);
-}
-
-// ====== WALI KELAS ======
-const WALI_GID='';
-const WALI_SHEET='Wali Kelas';
-const WALI_MANUAL={};
-let WALI={};
-const kn=k=>(k||'').toLowerCase().replace(/\s+/g,'');
-function mn(m){m=(m||'').toLowerCase();return m.includes('zamil')?'alzamil':m.includes('bassam')?'albassam':m.includes('afaf')?'alafaf':m.includes('tuq')?'almatuq':''}
-const wali=(m,k)=>WALI[mn(m)+'|'+kn(k)]||WALI['|'+kn(k)]||'';
-
-async function loadWali(){
-  WALI={};
-  try{
-    if(WALI_GID!==''||WALI_SHEET){
-      let rows;
-      try{
-        const r=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&`+(WALI_GID!==''?`gid=${WALI_GID}`:`sheet=${encodeURIComponent(WALI_SHEET)}`));
-        if(!r.ok)throw 0;
-        const t=await r.text();
-        if(t.trim().startsWith('<'))throw 0;
-        rows=csv(t);
-        localStorage.setItem('ma_wali',JSON.stringify(rows));
-      }catch(e){
-        rows=JSON.parse(localStorage.getItem('ma_wali')||'[]');
-      }
-      if(rows.length){
-        const h=rows[0].map(x=>x.trim().toLowerCase()),ik=h.indexOf('kelas'),iw=h.findIndex(x=>x.includes('wali')),im=h.findIndex(x=>x.startsWith('markaz')||x=='sekolah');
-        if(ik>=0&&iw>=0)rows.slice(1).forEach(r=>{const k=(r[ik]||'').trim(),w=(r[iw]||'').trim();if(k&&w)WALI[mn(im>=0?r[im]:'')+'|'+kn(k)]=w});
-      }
-    }
-    Object.entries(WALI_MANUAL).forEach(([k,v])=>{const p=k.split('|'),c=p.pop();WALI[mn(p[0]||'')+'|'+kn(c)]=v});
-  }catch(e){}
-}
-
-async function load(){
-  const wp=loadWali();
-  try{
-    const r=await fetch(URL_CSV);
-    if(!r.ok)throw 0;
-    const t=await r.text();
-    if(t.trim().startsWith('<'))throw 0;
-    ALL=build(csv(t));
-    localStorage.setItem('ma_cache_v2',JSON.stringify({t:Date.now(),d:ALL}));
-    await wp;
-    done('Diperbarui '+new Date().toLocaleString('id-ID'));
-  }catch(e){
-    const c=localStorage.getItem('ma_cache_v2');
-    if(c){
-      const j=JSON.parse(c);
-      ALL=j.d;
-      ALL.forEach(x=>x['Nama']=x['Nama'].toUpperCase());
-      await wp;
-      done('Offline · data tersimpan '+new Date(j.t).toLocaleString('id-ID'));
-    } else {
-      $('#app').innerHTML='<div class="msg">Gagal memuat data. Pastikan Google Sheet dibagikan "Siapa saja yang memiliki link (Viewer)" lalu tekan Muat Ulang.</div>';
-    }
-  }
-}
-
-// ====== EXPORT CSV (EXCEL COMPATIBLE) ======
-function exportCSV(list, filenamePrefix) {
-  if (!list || !list.length) return;
-  const headers = [
-    'No', 'NIS', 'NISN', 'NIK', 'No KK', 'Nama Lengkap', 'Nama Arab',
-    'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir', 'Umur',
-    'Tingkat', 'Kelas / Rombel', 'Markaz', 'Wali Kelas',
-    'Anak Ke / Jml Saudara', 'Nama Ayah', 'NIK Ayah', 'Tanggal Lahir Ayah', 'TTL Ayah',
-    'Pendidikan Ayah', 'Pekerjaan Ayah', 'Penghasilan Ayah',
-    'Nama Ibu', 'NIK Ibu', 'Tanggal Lahir Ibu', 'TTL Ibu',
-    'Pendidikan Ibu', 'Pekerjaan Ibu', 'Penghasilan Ibu',
-    'Status Yatim', 'Jenis Yatim', 'Anak Pegawai', 'Nama Pegawai',
-    'Alamat Lengkap', 'Kelurahan', 'Kecamatan', 'Kota/Kab', 'Provinsi', 'Kode Pos'
-  ];
-
-  // Tambahkan tanda ="..." untuk kolom angka panjang agar Excel tidak menghilangkan 0 di depan atau mengubah ke +E15
-  const wrapNum = v => v ? `="${String(v).replace(/"/g, '""')}"` : '""';
-  const wrapTxt = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
-
-  const rows = list.map((x, idx) => [
-    idx + 1,
-    wrapNum(x['NIS']),
-    wrapNum(x['NISN']),
-    wrapNum(x['NIK']),
-    wrapNum(x['No KK']),
-    wrapTxt(x['Nama']),
-    wrapTxt(x['Nama Arab']),
-    wrapTxt(x['Gender']),
-    wrapTxt(title(x['Tempat Lahir'])),
-    wrapTxt(tgl(x['Tanggal Lahir'])),
-    wrapTxt(ageStr(x)),
-    wrapTxt(x['Tingkat']),
-    wrapTxt(x['Kelas']),
-    wrapTxt(x._mk),
-    wrapTxt(wali(x._mk, x['Kelas'])),
-    wrapTxt(anak(x)),
-    wrapTxt(x['Nama Ayah']),
-    wrapNum(x['NIK Ayah']),
-    wrapTxt(x['Tanggal Lahir Ayah']),
-    wrapTxt(x['TTL Ayah']),
-    wrapTxt(x['Pendidikan Ayah']),
-    wrapTxt(x['Pekerjaan Ayah']),
-    wrapTxt(x['Penghasilan Ayah']),
-    wrapTxt(x['Nama Ibu']),
-    wrapNum(x['NIK Ibu']),
-    wrapTxt(x['Tanggal Lahir Ibu']),
-    wrapTxt(x['TTL Ibu']),
-    wrapTxt(x['Pendidikan Ibu']),
-    wrapTxt(x['Pekerjaan Ibu']),
-    wrapTxt(x['Penghasilan Ibu']),
-    wrapTxt(x['Status Yatim']),
-    wrapTxt(x['Jenis Yatim']),
-    wrapTxt(x['Anak Pegawai']),
-    wrapTxt(x['Nama Pegawai']),
-    wrapTxt(alamat(x)),
-    wrapTxt(title(x['Kelurahan'])),
-    wrapTxt(title(x['Kecamatan'])),
-    wrapTxt(title(x['Kota'])),
-    wrapTxt(title(x['Provinsi'])),
-    wrapNum(x['Kode Pos'])
-  ].join(','));
-
-  // BOM UTF-8 agar huruf Arab & karakter khusus terbaca sempurna di Microsoft Excel
-  const csvContent = '\uFEFF' + headers.map(wrapTxt).join(',') + '\n' + rows.join('\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const cleanName = (filenamePrefix || 'Data_Siswa_MA').replace(/[^a-zA-Z0-9_-]/g, '_');
-  const dateTag = new Date().toISOString().slice(0, 10);
-  a.href = url;
-  a.download = `${cleanName}_${dateTag}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-function setNav(){const n=$('nav');if(n)document.documentElement.style.setProperty('--navh',n.offsetHeight+'px')}
-function done(s){$('#sub').textContent=s;setNav();render()}
-const data=()=>mk=='Semua'?ALL:ALL.filter(x=>x._mk==mk);
-function group(list,fn){const m={};list.forEach(x=>{const k=fn(x)||'Tidak diisi';(m[k]=m[k]||[]).push(x)});return m}
-const SORT={},CARDS={};
-const cmp=(a,b)=>(typeof a=='number'&&typeof b=='number')?a-b:String(a==null?'':a).localeCompare(String(b==null?'':b),'id',{numeric:true,sensitivity:'base'});
-const sid=t=>'c'+t.replace(/[^a-z0-9]/gi,'');
-function th(id,i,label,cls){const s=SORT[id],on=s&&s.c===i;return `<th class="so${on?' on':''}${cls?' '+cls:''}" onclick="srt('${id}',${i})">${label}<i>${on?(s.d>0?'▲':'▼'):'⇅'}</i></th>`}
-function srt(id,i){const s=SORT[id];SORT[id]=s&&s.c===i?{c:i,d:-s.d}:{c:i,d:1};redraw(id)}
-function srtSel(id,i){SORT[id]={c:+i,d:(SORT[id]||{d:1}).d};redraw(id)}
-function srtDir(id){const s=SORT[id]||{c:2,d:1};SORT[id]={c:s.c,d:-s.d};redraw(id)}
-function redraw(id){
-  if(id=='lst')return drawM();
-  if(id=='dl')return drawDl();
-  const el=document.getElementById(id);
-  if(!el||!CARDS[id])return;
-  const sc=el.querySelector('.scroll'),y=sc?sc.scrollTop:0;
-  el.outerHTML=CARDS[id]();
-  const n=document.getElementById(id).querySelector('.scroll');
-  if(n)n.scrollTop=y;
-}
-
-function bars(title,m,opt={}){
-  let e0=Object.entries(m);
-  const k=opt.order,id=sid(title);
-  e0.sort(k?(a,b)=>(k.indexOf(a[0])<0?99:k.indexOf(a[0]))-(k.indexOf(b[0])<0?99:k.indexOf(b[0])):(a,b)=>b[1].length-a[1].length);
-  CARDS[id]=()=>{
-    const s=SORT[id];
-    let e=e0.slice();
-    if(s)e.sort((a,b)=>s.d*(s.c==0?cmp(a[0],b[0]):a[1].length-b[1].length));
-    window['_'+id]=e;
-    const mx=Math.max(1,...e.map(x=>x[1].length)),q=t=>t.replace(/'/g,"\\'"),hd=(c,l)=>{const on=SORT[id]&&SORT[id].c===c;return `<span class="so${on?' on':''}" onclick="srt('${id}',${c})">${l}<i>${on?(SORT[id].d>0?'▲':'▼'):'⇅'}</i></span>`};
-    return `<div class="card" id="${id}"><h3>${esc(title)}</h3><div class="bh">${hd(0,'Kategori')}${hd(1,'Jumlah')}</div><div class="${e.length>9?'scroll':''}">${e.map((x,i)=>`<div class="row" onclick="${esc(`openM('${q(title)} — ${q(x[0])}',window._${id}[${i}][1])`)}"><span class="l">${esc(x[0])}</span><span class="tr"><i style="width:${x[1].length/mx*100}%"></i></span><span class="n">${x[1].length}</span></div>`).join('')}</div></div>`;
-  };
-  return CARDS[id]();
-}
-
-const markazCard=d=>xtab('Siswa per Markaz & Tingkat',d,x=>'Markaz '+x._mk,["Markaz Al-Ma'tuq",'Markaz Al-Zamil','Markaz Al-Afaf','Markaz Al-Bassam'],'Markaz');
-
-function eduRank(v){
-  v=(v||'').toLowerCase().replace(/[.\s]+/g,' ').trim();
-  if(/tidak (pernah )?sekolah|belum sekolah|tidak ada|tidak tamat/.test(v))return 0;
-  if(/putus/.test(v))return 1;
-  if(/\bsp ?-?\d|spesialis|profesi/.test(v))return 12;
-  if(/\bs ?-?3\b|doktor/.test(v))return 11;
-  if(/\bs ?-?2\b|magister/.test(v))return 10;
-  if(/\bs ?-?1\b|sarjana/.test(v))return 9;
-  if(/\bd ?-?(4|iv)\b/.test(v))return 8;
-  if(/\bd ?-?(3|iii)\b/.test(v))return 7;
-  if(/\bd ?-?(2|ii)\b/.test(v))return 6;
-  if(/\bd ?-?(1|i)\b/.test(v))return 5;
-  if(/paket c|\bsma\b|\bsmk\b|\bman\b|\bma\b|slta/.test(v))return 4;
-  if(/paket b|\bsmp\b|\bmts\b|sltp/.test(v))return 3;
-  if(/paket a|\bsd\b|\bmi\b/.test(v))return 2;
-  return 99;
-}
-
-function xtab(title,list,fn,order,first){
-  const g=group(list,fn);
-  let e=Object.entries(g);
-  e.sort(typeof order=='function'?(a,b)=>order(a[0])-order(b[0])||b[1].length-a[1].length:order?(a,b)=>(order.indexOf(a[0])<0?99:order.indexOf(a[0]))-(order.indexOf(b[0])<0?99:order.indexOf(b[0])):(a,b)=>b[1].length-a[1].length);
-  e.push(['Total',list]);
-  const n=window._xt.length,id=sid(title);
-  window._xt.push({title,rows:e});
-  const val=(r,c)=>c==0?r[0]:c==4?r[1].length:r[1].filter(x=>x['Tingkat']==TING[c-1]).length;
-  CARDS[id]=()=>{
-    const s=SORT[id];
-    let o=e.slice(0,-1).map((r,i)=>i);
-    if(s)o.sort((a,b)=>s.d*cmp(val(e[a],s.c),val(e[b],s.c)));
-    o.push(e.length-1);
-    const c=(i,t,a)=>a.length?`<td class="c" onclick="openX(${n},${i},'${t}')">${a.length}</td>`:'<td class="z">-</td>';
-    return `<div class="card" id="${id}"><h3>${esc(title)}</h3><div class="${e.length>10?'scroll':''}"><table class="xt"><tr>${th(id,0,first||'Kategori')}${TING.map((t,j)=>th(id,j+1,t)).join('')}${th(id,4,'Total')}</tr>${o.map(i=>{const r=e[i];return `<tr${r[0]=='Total'?' class="tot"':''}><td>${esc(r[0])}</td>${TING.map(t=>c(i,t,r[1].filter(x=>x['Tingkat']==t))).join('')}${c(i,'',r[1])}</tr>`}).join('')}</table></div></div>`;
-  };
-  return CARDS[id]();
-}
-
-function openX(id,i,t){
-  const x=window._xt[id],r=x.rows[i];
-  openM(x.title+' — '+(r[0]=='Total'?'Semua':r[0])+(t?' · Kelas '+t:''),r[1].filter(y=>!t||y['Tingkat']==t));
-}
-
-function kelasCard(d){
-  window._kd=d;
-  const g=group(d,x=>x._mk+'|'+x['Kelas']);
-  window._kg=g;
-  const keys=Object.keys(g).sort((a,b)=>{const [ma,ka]=a.split('|'),[mb,kb]=b.split('|');return parseInt(ka)-parseInt(kb)||ka.localeCompare(kb)||ma.localeCompare(mb)});
-  window._kk=keys;
-  const id='cKelas';
-  const cnt=(a,f)=>a.filter(x=>x['Gender']==f).length;
-  const kv=keys.map(k=>{const [m,c]=k.split('|'),b=g[k];return [c,wali(m,c),m,cnt(b,'L'),cnt(b,'P'),b.length]});
-  const cell=(v,fn)=>v?`<td class="c" onclick="${fn}">${v}</td>`:'<td class="z">-</td>';
-  const ts=[...TING,...[...new Set(d.map(x=>x['Tingkat']))].filter(t=>t&&!TING.includes(t))];
-  CARDS[id]=()=>{
-    const s=SORT[id];
-    let boxes='';
-    ts.forEach(t=>{
-      const idx=keys.map((k,i)=>i).filter(i=>g[keys[i]][0]['Tingkat']==t);
-      if(!idx.length)return;
-      if(s)idx.sort((a,b)=>s.d*cmp(kv[a][s.c],kv[b][s.c]));
-      const a=d.filter(x=>x['Tingkat']==t);
-      let rows='';
-      idx.forEach(i=>{
-        const [c,w,m,l,p,n]=kv[i];
-        const info=[mk=='Semua'?m:'',w].filter(Boolean).map(esc).join(' · ');
-        rows+=`<tr><td><b>${esc(c)}</b>${info?`<small class="wk">${info}</small>`:''}</td>${cell(l,`openK(${i},'L')`)}${cell(p,`openK(${i},'P')`)}${cell(n,`openK(${i},'')`)}</tr>`;
-      });
-      rows+=`<tr class="sub"><td>Jumlah</td>${cell(cnt(a,'L'),`openT('${t}','L')`)}${cell(cnt(a,'P'),`openT('${t}','P')`)}${cell(a.length,`openT('${t}','')`)}</tr>`;
-      boxes+=`<div class="tb"><div class="tbh">Kelas ${esc(t)}<span>${idx.length} rombel · ${a.length} siswa</span></div><table class="xt"><tr>${th(id,0,'Kelas')}${th(id,3,'L','L')}${th(id,4,'P','P')}${th(id,5,'Total')}</tr>${rows}</table></div>`;
-    });
-    const tot=`<div class="tgt">Total semua rombel: <a class="L" onclick="openT('','L')">L ${cnt(d,'L')}</a> · <a class="P" onclick="openT('','P')">P ${cnt(d,'P')}</a> · <a onclick="openT('','')">${d.length} siswa</a></div>`;
-    return `<div class="card full" id="${id}"><h3>Siswa per Rombel &amp; Jenis Kelamin</h3><div class="tg">${boxes}</div>${tot}</div>`;
-  };
-  return CARDS[id]();
-}
-
-function jkTingkatCard(d){
-  const cnt=(a,f)=>a.filter(x=>x['Gender']==f).length;
-  const ts=[...TING,...[...new Set(d.map(x=>x['Tingkat']))].filter(t=>t&&!TING.includes(t))].filter(t=>d.some(x=>x['Tingkat']==t));
-  const cell=(v,fn)=>v?`<td class="c" onclick="${fn}">${v}</td>`:'<td class="z">-</td>';
-  let rows=ts.map(t=>{const a=d.filter(x=>x['Tingkat']==t);return `<tr><td>Kelas ${esc(t)}</td>${cell(cnt(a,'L'),`openT('${t}','L')`)}${cell(cnt(a,'P'),`openT('${t}','P')`)}${cell(a.length,`openT('${t}','')`)}</tr>`}).join('');
-  rows+=`<tr class="tot"><td>Total</td>${cell(cnt(d,'L'),"openT('','L')")}${cell(cnt(d,'P'),"openT('','P')")}${cell(d.length,"openT('','')")}</tr>`;
-  return `<div class="card"><h3>Siswa per Tingkat &amp; Jenis Kelamin</h3><table class="xt"><tr><th>Tingkat</th><th class="L">Laki-laki</th><th class="P">Perempuan</th><th>Total</th></tr>${rows}</table></div>`;
-}
-
-const JK=f=>f=='L'?'Laki-laki':'Perempuan';
-function openK(i,f){
-  const k=window._kk[i];
-  openM('Kelas '+k.split('|')[1]+' · '+k.split('|')[0]+(f?' · '+JK(f):''),window._kg[k].filter(x=>!f||x['Gender']==f),wali(k.split('|')[0],k.split('|')[1])?'Wali Kelas: '+wali(k.split('|')[0],k.split('|')[1]):'');
-}
-function openT(t,f){
-  openM((t?'Kelas '+t:'Semua Rombel')+(f?' · '+JK(f):''),window._kd.filter(x=>(!t||x['Tingkat']==t)&&(!f||x['Gender']==f)));
-}
-
+// ... existing code ... -->
 function render(){
-  $('#app').classList.toggle('wide',tab=='data');
+  $('#app').classList.toggle('wide',tab=='data'||(tab=='cari'&&cariMode=='full'));
   $('#app').classList.toggle('ortu-wide',tab=='ortu');
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t==tab));
-  $('#cs').classList.toggle('on',tab=='cari');
-  $('#mkSel').disabled=tab=='cari';
-  $('#chips .sel').style.opacity=tab=='cari'?.45:1;
-  
-  if(tab=='cari')return renderCari();
-  
-  if(tab=='data'){
-    const d0=data();
-    const kl=[...new Set(d0.map(x=>x['Kelas']||'').filter(Boolean))].sort((a,b)=>parseInt(a)-parseInt(b)||a.localeCompare(b,'id',{numeric:true}));
-    if(kf!='Semua'&&!kl.includes(kf))kf='Semua';
-    const dd=kf=='Semua'?d0:d0.filter(x=>(x['Kelas']||'')==kf);
-    window._dl=dd.slice().sort((a,b)=>a['Nama'].localeCompare(b['Nama']));
-    const expLabel = `Data_Siswa_${mk}_${kf}`;
-    $('#app').innerHTML=`
-      <div class="dtop">
-        <h3>Data Siswa · ${dd.length} siswa</h3>
-        <label class="kf">Rombel
-          <select onchange="kf=this.value;render()">
-            <option value="Semua">Semua rombel</option>
-            ${kl.map(k=>`<option value="${esc(k)}"${k==kf?' selected':''}>${esc(k)}</option>`).join('')}
-          </select>
-        </label>
-        <small>Klik nomor urut untuk melihat detail lengkap</small>
-        <div class="acts">
-          <button class="abtn accent" onclick="exportCSV(window._dl, '${esc(expLabel)}')" title="Export data yang difilter ke CSV/Excel">
-            ${ICO.export}<span>Export Data</span>
-          </button>
-        </div>
-      </div>
-      <div class="lw dl" id="dlw"></div>`;
-    drawDl();
-    return;
-  }
-
-  const d=data();
-  let h='';
-  window._xt=[];
-  const L=d.filter(x=>x['Gender']=='L'),P=d.filter(x=>x['Gender']=='P');
-  window._k=[['Total Siswa (Berombel)',d],['Laki-laki',L],['Perempuan',P]];
-  h+=`<div class="kpi">${window._k.map((k,i)=>`<div class="k" onclick="openM('${k[0]}',window._k[${i}][1])"><b>${k[1].length}</b><span>${k[0]}</span></div>`).join('')}</div><div class="grid${tab=='ortu'?' ortu-grid':''}">`;
-  
-  if(tab=='siswa'){
-    h+=jkTingkatCard(d);
-    h+=markazCard(d);
-    h+=bars('Siswa per Tingkat',group(d,x=>'Kelas '+x['Tingkat']),{order:TING.map(t=>'Kelas '+t)});
-    h+=kelasCard(d);
-  }
-  if(tab=='ortu'){
-    for(const [t,f,o] of [['Pendidikan','Pendidikan',eduRank],['Pekerjaan','Pekerjaan'],['Penghasilan','Penghasilan',ORDER_INC]])
-      for(const w of ['Ayah','Ibu'])h+=xtab(`${t} ${w}`,d,x=>x[f+' '+w],o,t);
-  }
-  if(tab=='yatim'){
-    const y=d.filter(x=>x['Status Yatim']=='Ya');
-    h+=bars('Siswa Yatim',group(d,x=>x['Status Yatim']=='Ya'?(x['Jenis Yatim']||'Yatim'):'Bukan Yatim'));
-    h+=bars('Siswa Yatim per Markaz',group(y,x=>'Markaz '+x._mk));
-    h+=bars('Siswa Yatim per Tingkat',group(y,x=>'Kelas '+x['Tingkat']),{order:TING.map(t=>'Kelas '+t)});
-  }
-  if(tab=='pegawai'){
-    const p=d.filter(x=>x['Anak Pegawai']=='Ya');
-    h+=bars('Anak Pegawai / Karyawan',group(d,x=>x['Anak Pegawai']=='Ya'?'Anak Pegawai/Karyawan':'Bukan Anak Pegawai'));
-    h+=bars('Anak Pegawai per Markaz',group(p,x=>'Markaz '+x._mk));
-    h+=bars('Anak Pegawai per Tingkat',group(p,x=>'Kelas '+x['Tingkat']),{order:TING.map(t=>'Kelas '+t)});
-  }
-  if(tab=='wilayah'){
-    h+=xtab('Siswa per Kecamatan',d,x=>title(x['Kecamatan']),null,'Kecamatan');
-    h+=xtab('Siswa per Kota/Kab',d,x=>title(x['Kota']),null,'Kota/Kab');
-    h+=xtab('Siswa per Provinsi',d,x=>title(x['Provinsi']),null,'Provinsi');
-  }
-  $('#app').innerHTML=h+'</div>';
+// ... existing code ... -->
+let qs='', lastSearchRes=[], cariMode='full';
+function setCariMode(m){
+  cariMode=m;
+  $('#app').classList.toggle('wide',m=='full');
+  document.querySelectorAll('.srch-mode button').forEach(b=>b.classList.toggle('on',b.dataset.m==m));
+  drawCari();
 }
-
-let lastY=0, curSub='', curTitle='';
-function openM(t,list,sub){
-  delete SORT.lst;
-  curTitle=t;
-  curSub=sub||'';
-  lastY=window.scrollY;
-  curList=list.slice().sort((a,b)=>a['Nama'].localeCompare(b['Nama']));
-  $('#app').innerHTML=`
-    <div class="lv">
-      <div class="lh">
-        <button class="abtn" onclick="closeM()">${ICO.back}<span>Kembali</span></button>
-        <div><h2>${esc(t)}</h2><small id="mc"></small></div>
-        <div class="acts">
-          <button class="abtn accent" onclick="exportCSV(curList, curTitle)">${ICO.export}<span>Export Data</span></button>
-        </div>
-      </div>
-      <div class="lw" id="ml"></div>
-    </div>`;
-  drawM();
-  window.scrollTo(0,0);
-}
-
-const BLN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const title=t=>(t||'').toLowerCase().replace(/(^|[\s\-\/(])([a-z])/g,(m,a,b)=>a+b.toUpperCase());
-function tgl(v){
-  v=(v||'').trim();
-  let d,m,y,r;
-  if(r=/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/.exec(v)){d=r[1];m=r[2];y=r[3]}
-  else if(r=/^(\d{4})-(\d{2})-(\d{2})/.exec(v)){y=r[1];m=r[2];d=r[3]}
-  else return v;
-  if(!BLN[+m-1]||+y<1900)return v;
-  return d.padStart(2,'0')+' '+BLN[+m-1]+' '+y;
-}
-const ttl=x=>[title(x['Tempat Lahir']),tgl(x['Tanggal Lahir'])].filter(Boolean).join(', ');
-function alamat(x){
-  const p=[],rt=x['RT'],rw=x['RW'];
-  if(x['Alamat'])p.push(x['Alamat'].replace(/[,\s]+$/,''));
-  if((rt&&+rt)||(rw&&+rw))p.push('RT '+(rt||'-')+'/RW '+(rw||'-'));
-  if(x['Kelurahan']){const k=(x['Kota']||'').trim();p.push((!k?'Desa/Kel. ':/^kota\b/i.test(k)?'Kel. ':'Desa ')+title(x['Kelurahan']))}
-  if(x['Kecamatan'])p.push('Kec. '+title(x['Kecamatan']));
-  if(x['Kota'])p.push(title(x['Kota']));
-  if(x['Provinsi'])p.push(title(x['Provinsi']));
-  if(x['Kode Pos']&&+x['Kode Pos'])p.push('Kode Pos '+x['Kode Pos']);
-  return p.join(', ');
-}
-
-let qs='', lastSearchRes=[];
 function renderCari(){
   $('#app').innerHTML=`
     <div class="srch">
-      <div class="srch-box">
-        ${ICO.search}
-        <input id="sq" type="search" placeholder="Ketik nama, NIS, NISN, atau NIK siswa…" value="${esc(qs)}" autocomplete="off">
+      <div class="srch-top">
+        <div class="srch-box">
+          ${ICO.search}
+          <input id="sq" type="search" placeholder="Ketik nama, NIS, NISN, NIK, desa, kec, atau kab…" value="${esc(qs)}" autocomplete="off">
+        </div>
+        <div class="srch-mode" role="group" aria-label="Mode tampilan pencarian">
+          <button type="button" data-m="full" class="${cariMode=='full'?'on':''}" onclick="setCariMode('full')">Semua Data (Full)</button>
+          <button type="button" data-m="wilayah" class="${cariMode=='wilayah'?'on':''}" onclick="setCariMode('wilayah')">Desa, Kec &amp; Kab Saja</button>
+        </div>
       </div>
       <div id="sr"></div>
     </div>`;
@@ -1103,7 +617,7 @@ function drawCari(){
     box.innerHTML=`<div class="msg">Ketik minimal 2 karakter untuk mencari di antara ${ALL.length} siswa aktif yang memiliki rombel.</div>`;
     return;
   }
-  lastSearchRes=ALL.filter(x=>[x['Nama'],x['Nama Arab'],x['NIS'],x['NISN'],x['NIK'],x['NIK Ayah'],x['NIK Ibu']].join(' ').toLowerCase().includes(q)).sort((p,r)=>p['Nama'].localeCompare(r['Nama']));
+  lastSearchRes=ALL.filter(x=>Object.values(x).join(' ').toLowerCase().includes(q)).sort((p,r)=>p['Nama'].localeCompare(r['Nama']));
   const expBtn = lastSearchRes.length ? `<button class="abtn accent" onclick="exportCSV(lastSearchRes, 'Hasil_Cari_${esc(qs)}')">${ICO.export}<span>Export Hasil (${lastSearchRes.length})</span></button>` : '';
   box.innerHTML=`
     <div class="cnt">
@@ -1114,6 +628,28 @@ function drawCari(){
 
 function cardS(x){
   const f=(l,v,c)=>`<div class="f${c?' '+c:''}"><span>${l}</span><b${c=='w'?' dir="rtl"':''}>${esc(v)||'-'}</b></div>`;
+  if(cariMode=='wilayah'){
+    const k=(x['Kota']||'').trim();
+    const lblDesa=!k?'Desa / Kelurahan':/^kota\b/i.test(k)?'Kelurahan':'Desa';
+    return `
+      <div class="sc" style="max-width:920px;margin:0 auto 14px">
+        <div class="sh">
+          <h4>${esc(x['Nama'])}</h4>
+          <span class="bd">Kelas ${esc(x['Kelas'])} · Markaz ${x._mk}</span>
+        </div>
+        <div class="fg">
+          ${f(lblDesa, title(x['Kelurahan']))}
+          ${f('Kecamatan', title(x['Kecamatan']))}
+          ${f('Kabupaten / Kota', title(x['Kota']))}
+        </div>
+      </div>`;
+  }
+  const cols = SHEET_COLS.length ? SHEET_COLS : Object.keys(x).filter(k=>!k.startsWith('_'));
+  const allFields = cols.map(k => {
+    const isArab = /arab/i.test(k);
+    const isLong = /alamat|keterangan|catatan/i.test(k);
+    return f(k, x[k], isArab ? 'w' : (isLong ? 'full' : ''));
+  }).join('');
   return `
     <div class="sc">
       <div class="sh">
@@ -1121,30 +657,7 @@ function cardS(x){
         <span class="bd">Kelas ${esc(x['Kelas'])} · Markaz ${x._mk}</span>
       </div>
       <div class="fg">
-        ${f('NIS',x['NIS'])}
-        ${f('NISN',x['NISN'])}
-        ${f('NIK Siswa',x['NIK'])}
-        ${f('No KK',x['No KK'])}
-        ${f('Nama Lengkap',x['Nama'])}
-        ${f('Nama Arab',x['Nama Arab'],'w')}
-        ${f('Tempat, Tanggal Lahir',ttl(x))}
-        ${f('Anak Ke / Jml Saudara',anak(x))}
-        <div class="dg-sec">Data Ayah</div>
-        ${f('Nama Ayah',x['Nama Ayah'])}
-        ${f('NIK Ayah',x['NIK Ayah'])}
-        ${f('TTL Ayah',x['TTL Ayah'])}
-        ${f('Pendidikan Ayah',x['Pendidikan Ayah'])}
-        ${f('Pekerjaan Ayah',x['Pekerjaan Ayah'])}
-        ${f('Penghasilan Ayah',x['Penghasilan Ayah'])}
-        <div class="dg-sec">Data Ibu</div>
-        ${f('Nama Ibu',x['Nama Ibu'])}
-        ${f('NIK Ibu',x['NIK Ibu'])}
-        ${f('TTL Ibu',x['TTL Ibu'])}
-        ${f('Pendidikan Ibu',x['Pendidikan Ibu'])}
-        ${f('Pekerjaan Ibu',x['Pekerjaan Ibu'])}
-        ${f('Penghasilan Ibu',x['Penghasilan Ibu'])}
-        <div class="dg-sec">Domisili</div>
-        ${f('Alamat Lengkap',alamat(x),'full')}
+        ${allFields}
       </div>
     </div>`;
 }
