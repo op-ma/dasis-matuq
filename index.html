@@ -368,6 +368,11 @@ tr.sub td{font-weight:700;background:var(--acc-soft);color:var(--acc)}
 .scroll tr.tot td{position:sticky;bottom:0;box-shadow:0 -1px 0 var(--line)}
 .xt td:first-child{word-break:break-word}
 .xt td.z{color:#cbd5e1}
+.card .xw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.xt th,.xt td{padding:8px 6px}
+.xt th{font-size:12.5px;letter-spacing:0}
+.xt th.so:not(.on) i{display:none}
+.xt th.so:not(.on):hover i{display:inline}
 .xt tr.kid{display:none}
 .xt tr.kid.open{display:table-row}
 .xt tr.kid td{background:#faf8f3;font-size:13.5px}
@@ -580,6 +585,7 @@ small.wk{display:block;font-size:12.5px;font-weight:400;color:var(--mut);margin-
   .kpi{grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
   .k{padding:10px 10px}.k span{font-size:11px}.k b{font-size:24px}
   .grid{gap:12px}.card{padding:14px 12px}
+  .xt th,.xt td{padding:7px 4px}.xt th{font-size:11.5px}.xt td{font-size:13.5px}
   .lw{background:none;border:0;box-shadow:none;padding:0}
   .lst td[data-l="No"]{display:none}
   .lst{min-width:0;display:block}.lst tbody{display:block}.lst tr:first-child{display:none}
@@ -1126,7 +1132,7 @@ function xtab(title,list,fn,order,first,extra,kidFn){
       const kr=k.map((kk,j)=>`<tr class="kid${op?' open':''}"><td>↳ ${esc(kk[0])}</td>${TING.map(t=>c(i,t,kk[1].filter(x=>x['Tingkat']==t),j)).join('')}${c(i,'',kk[1],j)}</tr>`).join('');
       return main+kr;
     }).join('');
-    return `<div class="card" id="${id}"><h3><span>${esc(title)}</span>${acts}</h3><div class="${e.length>10||kids?'scroll':''}"><table class="xt"><tr>${th(id,0,first||'Kategori')}${TING.map((t,j)=>th(id,j+1,t)).join('')}${th(id,totCol,'Total')}</tr>${body}</table></div></div>`;
+    return `<div class="card" id="${id}"><h3><span>${esc(title)}</span>${acts}</h3><div class="xw${e.length>10||kids?' scroll':''}"><table class="xt"><tr>${th(id,0,first||'Kategori')}${TING.map((t,j)=>th(id,j+1,t)).join('')}${th(id,totCol,'Total')}</tr>${body}</table></div></div>`;
   };
   return CARDS[id]();
 }
