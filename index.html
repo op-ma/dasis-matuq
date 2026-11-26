@@ -1079,7 +1079,20 @@ function renderCari(){
   i.focus();
 }
 
-// ... existing code ... -->
+function drawCari(){
+  const q=qs.trim().toLowerCase(),box=$('#sr');
+  if(!box)return;
+  if(q.length<2){
+    lastSearchRes=[];
+    box.innerHTML=`<div class="msg">Ketik minimal 2 karakter untuk mencari di antara ${ALL.length} siswa.</div>`;
+    return;
+  }
+  const a=ALL.filter(x=>[x['Nama'],x['Nama Arab'],x['NIS'],x['NISN'],x['NIK'],x['Kelurahan'],x['Kecamatan'],x['Kota']].join(' ').toLowerCase().includes(q)).sort((p,r)=>p['Nama'].localeCompare(r['Nama']));
+  lastSearchRes=a;
+  const expBtn = a.length ? `<button class="abtn accent" onclick="exportCSV(lastSearchRes, 'Hasil_Pencarian_${esc(qs.trim())}')" title="Export hasil pencarian">${ICO.export}<span>Export (${a.length})</span></button>` : '';
+  box.innerHTML=`<div class="cnt"><span>${a.length} hasil ditemukan${a.length>30?' · menampilkan 30 pertama, persempit pencarian':''}</span>${expBtn}</div>`+a.slice(0,30).map(cardS).join('');
+}
+
 function cardS(x){
   const f=(l,v,c)=>`<div class="f${c?' '+c:''}"><span>${l}</span><b${c=='w'?' dir="rtl"':''}>${esc(v)||'-'}</b></div>`;
   if(cariMode=='wilayah'){
