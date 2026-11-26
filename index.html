@@ -1068,7 +1068,7 @@ function renderCari(){
         </div>
         <div class="srch-mode" role="group" aria-label="Mode tampilan pencarian">
           <button type="button" data-m="full" class="${cariMode=='full'?'on':''}" onclick="setCariMode('full')">Semua Data (Full)</button>
-          <button type="button" data-m="wilayah" class="${cariMode=='wilayah'?'on':''}" onclick="setCariMode('wilayah')">Desa, Kec &amp; Kab Saja</button>
+          <button type="button" data-m="wilayah" class="${cariMode=='wilayah'?'on':''}" onclick="setCariMode('wilayah')">Pencarian NISN</button>
         </div>
       </div>
       <div id="sr"></div>
@@ -1079,22 +1079,7 @@ function renderCari(){
   i.focus();
 }
 
-function drawCari(){
-  const q=qs.trim().toLowerCase(),box=$('#sr');
-  if(q.length<2){
-    lastSearchRes=[];
-    box.innerHTML=`<div class="msg">Ketik minimal 2 karakter untuk mencari di antara ${ALL.length} siswa aktif yang memiliki rombel.</div>`;
-    return;
-  }
-  lastSearchRes=ALL.filter(x=>Object.values(x).join(' ').toLowerCase().includes(q)).sort((p,r)=>p['Nama'].localeCompare(r['Nama']));
-  const expBtn = lastSearchRes.length ? `<button class="abtn accent" onclick="exportCSV(lastSearchRes, 'Hasil_Cari_${esc(qs)}')">${ICO.export}<span>Export Hasil (${lastSearchRes.length})</span></button>` : '';
-  box.innerHTML=`
-    <div class="cnt">
-      <span>${lastSearchRes.length} hasil ditemukan${lastSearchRes.length>30?' · menampilkan 30 pertama':''}</span>
-      ${expBtn}
-    </div>` + lastSearchRes.slice(0,30).map(cardS).join('');
-}
-
+// ... existing code ... -->
 function cardS(x){
   const f=(l,v,c)=>`<div class="f${c?' '+c:''}"><span>${l}</span><b${c=='w'?' dir="rtl"':''}>${esc(v)||'-'}</b></div>`;
   if(cariMode=='wilayah'){
@@ -1107,18 +1092,43 @@ function cardS(x){
           <span class="bd">Kelas ${esc(x['Kelas'])} · Markaz ${x._mk}</span>
         </div>
         <div class="fg">
+          ${f('NISN', x['NISN'])}
+          ${f('NIK', x['NIK'])}
+          ${f('Tempat, Tanggal Lahir', ttl(x))}
+          ${f('Nama Ibu', x['Nama Ibu'])}
           ${f(lblDesa, title(x['Kelurahan']))}
           ${f('Kecamatan', title(x['Kecamatan']))}
           ${f('Kabupaten / Kota', title(x['Kota']))}
         </div>
       </div>`;
   }
+
+  // Kategorisasi semua kolom dari Google Sheet pada mode Semua Data (Full)
   const cols = SHEET_COLS.length ? SHEET_COLS : Object.keys(x).filter(k=>!k.startsWith('_'));
-  const allFields = cols.map(k => {
-    const isArab = /arab/i.test(k);
-    const isLong = /alamat|keterangan|catatan/i.test(k);
-    return f(k, x[k], isArab ? 'w' : (isLong ? 'full' : ''));
-  }).join('');
+  const used = new Set();
+  const pick = (rx) => cols.filter(k => {
+    if(used.has(k)) return false;
+    if(rx.test(k)){ used.add(k); return true; }
+    return false;
+  });
+
+  const cAyah = pick(/ayah/i);
+  const cIbu = pick(/ibu/i);
+  const cWali = pick(/\bwali\b/i);
+  const cAlamat = pick(/alamat|rt|rw|kelurahan|desa|kecamatan|kota|kabupaten|provinsi|kode\s*pos/i);
+  const cAkademik = pick(/sekolah|markaz|tingkat|kelas|rombel|tahun|status|yatim|pegawai|karyawan|asal|ijazah|skhun|ujian/i);
+  const cSiswa = cols.filter(k => !used.has(k));
+
+  const renderSec = (secTitle, keys, extraHTML='') => {
+    if(!keys.length && !extraHTML) return '';
+    const items = keys.map(k => {
+      const isArab = /arab/i.test(k);
+      const isLong = /alamat|keterangan|catatan/i.test(k);
+      return f(k, x[k], isArab ? 'w' : (isLong ? 'full' : ''));
+    }).join('');
+    return `<div class="dg-sec">${secTitle}</div>${extraHTML}${items}`;
+  };
+
   return `
     <div class="sc">
       <div class="sh">
@@ -1126,7 +1136,12 @@ function cardS(x){
         <span class="bd">Kelas ${esc(x['Kelas'])} · Markaz ${x._mk}</span>
       </div>
       <div class="fg">
-        ${allFields}
+        ${renderSec('Identitas Siswa', cSiswa)}
+        ${renderSec('Akademik & Keterangan Lainnya', cAkademik)}
+        ${renderSec('Data Ayah', cAyah)}
+        ${renderSec('Data Ibu', cIbu)}
+        ${renderSec('Data Wali', cWali)}
+        ${renderSec('Alamat & Wilayah', cAlamat, f('Alamat Lengkap Gabungan', alamat(x), 'full'))}
       </div>
     </div>`;
 }
