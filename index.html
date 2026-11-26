@@ -1097,7 +1097,11 @@ function cardS(x){
   const f=(l,v,c)=>`<div class="f${c?' '+c:''}"><span>${l}</span><b${c=='w'?' dir="rtl"':''}>${esc(v)||'-'}</b></div>`;
   if(cariMode=='wilayah'){
     const k=(x['Kota']||'').trim();
-    const lblDesa=!k?'Desa / Kelurahan':/^kota\b/i.test(k)?'Kelurahan':'Desa';
+    const isKota=/^kota\b/i.test(k);
+    const wParts=[];
+    if(k) wParts.push(isKota || /^(kab\.?|kabupaten)\b/i.test(k) ? title(k) : 'Kab. ' + title(k));
+    if(x['Kecamatan']) wParts.push('Kec. ' + title(x['Kecamatan']));
+    if(x['Kelurahan']) wParts.push((!k ? 'Desa/Kel. ' : isKota ? 'Kel. ' : 'Desa ') + title(x['Kelurahan']));
     return `
       <div class="sc" style="max-width:920px;margin:0 auto 14px">
         <div class="sh">
@@ -1109,59 +1113,77 @@ function cardS(x){
           ${f('NIK', x['NIK'])}
           ${f('Tempat, Tanggal Lahir', ttl(x))}
           ${f('Nama Ibu', x['Nama Ibu'])}
-          ${f(lblDesa, title(x['Kelurahan']))}
-          ${f('Kecamatan', title(x['Kecamatan']))}
-          ${f('Kabupaten / Kota', title(x['Kota']))}
+          ${f('Alamat Wilayah', wParts.join(', '), 'full')}
         </div>
       </div>`;
   }
 
   // Kategorisasi semua kolom dari Google Sheet pada mode Semua Data (Full)
-  const cols = SHEET_COLS.length ? SHEET_COLS : Object.keys(x).filter(k=>!k.startsWith('_'));
+  const allKeys = SHEET_COLS.length ? SHEET_COLS : Object.keys(x).filter(k => !k.startsWith('_'));
   const used = new Set();
-  const pick = (rx) => cols.filter(k => {
-    if(used.has(k)) return false;
+  const pick = (rx) => allKeys.filter(k => {
+    if(used.has(k) || k.startsWith('_')) return false;
     if(rx.test(k)){ used.add(k); return true; }
     return false;
   });
 
-  const cAyah = pick(/ayah/i);
-  const cIbu = pick(/ibu/i);
-  const cWali = pick(/\bwali\b/i);
-  const cAlamat = pick(/alamat|rt|rw|kelurahan|desa|kecamatan|kota|kabupaten|provinsi|kode\s*pos/i);
-  const cAkademik = pick(/sekolah|markaz|tingkat|kelas|rombel|tahun|status|yatim|pegawai|karyawan|asal|ijazah|skhun|ujian/i);
-  const cSiswa = cols.filter(k => !used.has(k));
+  const catIdentitas = pick(/^(nis|nisn|nik|no\.?\s*kk|kartu keluarga|nama|gender|jenis kelamin|tempat lahir|tanggal lahir|anak ke|jml saudara|jumlah saudara|agama|kewarganegaraan|no\.?\s*hp|telepon|email)/i);
+  const catAyah = pick(/ayah/i);
+  const catIbu = pick(/ibu/i);
+  const catWali = pick(/wali/i);
+  const catAlamat = pick(/^(alamat|rt|rw|kelurahan|desa|kecamatan|kota|kabupaten|provinsi|kode pos|lintang|bujur|jarak|transportasi)/i);
+  const catAkademik = allKeys.filter(k => !used.has(k) && !k.startsWith('_'));
 
-  const renderSec = (secTitle, keys, extraHTML='') => {
-    if(!keys.length && !extraHTML) return '';
-    const items = keys.map(k => {
-      const isArab = /arab/i.test(k);
-      const isLong = /alamat|keterangan|catatan/i.test(k);
-      return f(k, x[k], isArab ? 'w' : (isLong ? 'full' : ''));
-    }).join('');
-    return `<div class="dg-sec">${secTitle}</div>${extraHTML}${items}`;
-  };
+  const renderGroup = (cols) => cols.map(k => {
+    let val = x[k];
+    if(/tanggal lahir/i.test(k) && val) val = tgl(val);
+    const isArab = /arab/i.test(k);
+    return f(k, val, isArab ? 'w' : '');
+  }).join('');
 
   return `
     <div class="sc">
       <div class="sh">
         <h4>${esc(x['Nama'])}</h4>
-        <span class="bd">Kelas ${esc(x['Kelas'])} · Markaz ${x._mk}</span>
+        <span class="bd">Kelas ${esc(x['Kelas'])} · Markaz ${x._mk}${wali(x._mk, x['Kelas']) ? ' · Wali: ' + esc(wali(x._mk, x['Kelas'])) : ''}</span>
       </div>
       <div class="fg">
-        ${renderSec('Identitas Siswa', cSiswa)}
-        ${renderSec('Akademik & Keterangan Lainnya', cAkademik)}
-        ${renderSec('Data Ayah', cAyah)}
-        ${renderSec('Data Ibu', cIbu)}
-        ${renderSec('Data Wali', cWali)}
-        ${renderSec('Alamat & Wilayah', cAlamat, f('Alamat Lengkap Gabungan', alamat(x), 'full'))}
+        <div class="dg-sec">Identitas Siswa</div>
+        ${renderGroup(catIdentitas)}
+        ${f('Umur Saat Ini', ageStr(x))}
+
+        <div class="dg-sec">Akademik &amp; Keterangan Lainnya</div>
+        ${renderGroup(catAkademik)}
+
+        <div class="dg-sec">Data Ayah</div>
+        ${renderGroup(catAyah)}
+        ${!catAyah.some(k=>/nik/i.test(k)) ? f('NIK Ayah', x['NIK Ayah']) : ''}
+        ${!catAyah.some(k=>/ttl/i.test(k)) ? f('TTL Ayah', x['TTL Ayah']) : ''}
+
+        <div class="dg-sec">Data Ibu</div>
+        ${renderGroup(catIbu)}
+        ${!catIbu.some(k=>/nik/i.test(k)) ? f('NIK Ibu', x['NIK Ibu']) : ''}
+        ${!catIbu.some(k=>/ttl/i.test(k)) ? f('TTL Ibu', x['TTL Ibu']) : ''}
+
+        ${catWali.length ? `<div class="dg-sec">Data Wali</div>${renderGroup(catWali)}` : ''}
+
+        <div class="dg-sec">Alamat &amp; Wilayah</div>
+        ${f('Alamat Lengkap Gabungan', alamat(x), 'full')}
+        ${renderGroup(catAlamat)}
       </div>
     </div>`;
 }
 
-// ====== TABEL DAFTAR SISWA & DETAIL EXPAND ======
+// ====== DAFTAR SISWA & DETAIL EXPAND ======
 const dkey=x=>{const m=/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/.exec(x['Tanggal Lahir']||'');return m?m[3]+m[2].padStart(2,'0')+m[1].padStart(2,'0'):(x['Tanggal Lahir']||'')};
-function dob(x){const v=(x['Tanggal Lahir']||'').trim();let r,y,m,d;if(r=/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/.exec(v)){d=+r[1];m=+r[2];y=+r[3]}else if(r=/^(\d{4})-(\d{2})-(\d{2})/.exec(v)){y=+r[1];m=+r[2];d=+r[3]}else return null;if(y<1900||m<1||m>12)return null;return new Date(y,m-1,d)}
+function dob(x){
+  const v=(x['Tanggal Lahir']||'').trim();let r,y,m,d;
+  if(r=/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/.exec(v)){d=+r[1];m=+r[2];y=+r[3]}
+  else if(r=/^(\d{4})-(\d{2})-(\d{2})/.exec(v)){y=+r[1];m=+r[2];d=+r[3]}
+  else return null;
+  if(y<1900||m<1||m>12)return null;
+  return new Date(y,m-1,d);
+}
 function ageM(x){const b=dob(x);if(!b)return null;const n=new Date();let mo=(n.getFullYear()-b.getFullYear())*12+n.getMonth()-b.getMonth();if(n.getDate()<b.getDate())mo--;return mo>=0?mo:null}
 const ageStr=x=>{const m=ageM(x);return m==null?'-':Math.floor(m/12)+' th '+(m%12)+' bln'};
 const anak=x=>{const a=(x['Anak Ke']||'').trim(),j=(x['Jml Saudara']||'').trim();return a&&j?a+' dari '+j:a||(j?'- dari '+j:'')};
@@ -1182,16 +1204,19 @@ function lstHTML(id,list){
   if(hw)cols.push(['Wali Kelas',x=>wali(x._mk,x['Kelas']),'wl',x=>td('Wali Kelas',esc(wali(x._mk,x['Kelas']))||'-','wl')]);
   if(ep)cols.push(['Nama Pegawai (Orang Tua)',x=>x['Nama Pegawai'],'ep',x=>td('Orang Tua',esc(x['Nama Pegawai'])||'-','ep')]);
 
-  const s=SORT[id];
-  let a=list;
+  const s=SORT[id];let a=list;
   if(s&&cols[s.c]&&cols[s.c][1]){
     const f=cols[s.c][1];
-    a=list.slice().sort((p,q)=>{const A=f(p),B=f(q),ea=A===''||A==null,eb=B===''||B==null;if(ea&&!eb)return 1;if(!ea&&eb)return -1;return s.d*cmp(A,B)});
+    a=list.slice().sort((p,q)=>{
+      const A=f(p),B=f(q),ea=A===''||A==null,eb=B===''||B==null;
+      if(ea&&!eb)return 1;if(!ea&&eb)return -1;
+      return s.d*cmp(A,B);
+    });
   }
   const cur=s?s.c:2,dir=s?s.d:1;
   const bar=`<div class="sortbar"><label>Urutkan <select onchange="srtSel('${id}',this.value)">${cols.slice(1).map((c,i)=>`<option value="${i+1}"${cur==i+1?' selected':''}>${c[0]}</option>`).join('')}</select></label><button onclick="srtDir('${id}')" aria-label="Balik urutan">${dir>0?'▲ A–Z':'▼ Z–A'}</button></div>`;
   const f=(l,v,c)=>`<div class="f${c?' '+c:''}"><span>${l}</span><b${c=='w'?' dir="rtl"':''}>${esc(v)||'-'}</b></div>`;
-  
+
   const rowH=(x,n)=>{
     const k=full?dk(x):'',op=full&&OPEN.has(k);
     const main=`<tr${full?` class="mr${op?' open':''}" data-k="${esc(k)}"`:''}><td data-l="No"${full?` class="nt" onclick="tgr(this.parentNode)" title="Klik untuk lihat detail"`:''}>${full?`<span class="tg-ico">${ICO.chevRight}</span> `:''}${n+1}</td>${cols.slice(1).map(c=>c[3](x)).join('')}</tr>`;
@@ -1200,11 +1225,14 @@ function lstHTML(id,list){
       <tr class="dr${op?' open':''}">
         <td colspan="${cols.length}">
           <div class="dg">
+            <div class="dg-sec">Identitas Siswa</div>
             ${f('NIS',x['NIS'])}
+            ${f('NISN',x['NISN'])}
             ${f('NIK Siswa',x['NIK'])}
             ${f('No KK',x['No KK'])}
             ${f('Anak Ke / Jml Saudara',anak(x))}
             ${f('Nama Arab',x['Nama Arab'],'w')}
+
             <div class="dg-sec">Data Ayah</div>
             ${f('Nama Ayah',x['Nama Ayah'])}
             ${f('NIK Ayah',x['NIK Ayah'])}
@@ -1213,6 +1241,7 @@ function lstHTML(id,list){
             ${f('Pendidikan Ayah',x['Pendidikan Ayah'])}
             ${f('Pekerjaan Ayah',x['Pekerjaan Ayah'])}
             ${f('Penghasilan Ayah',x['Penghasilan Ayah'])}
+
             <div class="dg-sec">Data Ibu</div>
             ${f('Nama Ibu',x['Nama Ibu'])}
             ${f('NIK Ibu',x['NIK Ibu'])}
@@ -1221,8 +1250,9 @@ function lstHTML(id,list){
             ${f('Pendidikan Ibu',x['Pendidikan Ibu'])}
             ${f('Pekerjaan Ibu',x['Pekerjaan Ibu'])}
             ${f('Penghasilan Ibu',x['Penghasilan Ibu'])}
-            <div class="dg-sec">Alamat Lengkap</div>
-            ${f('Alamat Domisili',alamat(x),'full')}
+
+            <div class="dg-sec">Domisili</div>
+            ${f('Alamat Lengkap',alamat(x),'full')}
           </div>
         </td>
       </tr>`;
@@ -1231,27 +1261,16 @@ function lstHTML(id,list){
 }
 
 let OPEN=new Set();
-const dk=x=>x['ID']||x['NISN']||x['Nama'];
-function tgr(tr){
-  const k=tr.dataset.k,o=!tr.classList.contains('open');
-  tr.classList.toggle('open',o);
-  tr.nextElementSibling.classList.toggle('open',o);
-  o?OPEN.add(k):OPEN.delete(k);
-}
-function drawM(){
-  $('#mc').textContent=curList.length+' siswa'+(curSub?' · '+curSub:'');
-  $('#ml').innerHTML=lstHTML('lst',curList);
-}
-function drawDl(){
-  const e=$('#dlw');
-  if(e)e.innerHTML=lstHTML('dl',window._dl);
-}
+const dk=x=>x['ID']||x['NISN']||x['NIK']||x['Nama'];
+function tgr(tr){const k=tr.dataset.k,o=!tr.classList.contains('open');tr.classList.toggle('open',o);tr.nextElementSibling.classList.toggle('open',o);o?OPEN.add(k):OPEN.delete(k)}
+function drawM(){$('#mc').textContent=curList.length+' siswa'+(curSub?' · '+curSub:'');$('#ml').innerHTML=lstHTML('lst',curList)}
+function drawDl(){const e=$('#dlw');if(e)e.innerHTML=lstHTML('dl',window._dl)}
 function closeM(){render();window.scrollTo(0,lastY)}
 
+// ====== INISIALISASI KONTROL & EVENT ======
 let prevTab='siswa';
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
 
-// Header Controls dengan Icon Button
 $('#chips').innerHTML=`
   <label class="sel">
     <span>Markaz</span>
@@ -1259,8 +1278,8 @@ $('#chips').innerHTML=`
       ${[['Semua','Semua Markaz'],["Al-Ma'tuq","Al-Ma'tuq"],['Al-Zamil','Al-Zamil'],['Al-Afaf','Al-Afaf'],['Al-Bassam','Al-Bassam']].map(m=>`<option value="${m[0]}">${m[1]}</option>`).join('')}
     </select>
   </label>
-  <button class="ibtn" id="cs" aria-label="Cari siswa" title="Cari siswa">${ICO.search}<span class="lbl">Cari</span></button>
-  <button class="ibtn icon-only ref" id="rf" aria-label="Muat ulang data" title="Muat ulang data">${ICO.refresh}</button>
+  <button class="ibtn" id="cs" aria-label="Cari siswa" title="Cari siswa">${ICO.search}<span class="lbl">Cari Siswa</span></button>
+  <button class="ibtn icon-only ref" id="rf" aria-label="Muat ulang data" title="Muat ulang data dari Google Sheet">${ICO.refresh}</button>
 `;
 
 $('#mkSel').onchange=e=>{mk=e.target.value;render()};
@@ -1273,21 +1292,18 @@ const standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').ma
 function showIns(html){
   let x=0;try{x=localStorage.getItem('ins_x')}catch(_){}
   if(standalone||x)return;
-  const e=$('#ins');
-  e.innerHTML=html+'<button class="ix" aria-label="Tutup">×</button>';
-  e.hidden=false;
+  const e=$('#ins');e.innerHTML=html+'<button class="ix" aria-label="Tutup">×</button>';e.hidden=false;
   e.querySelector('.ix').onclick=()=>{e.hidden=true;try{localStorage.setItem('ins_x','1')}catch(_){}};
-  const b=e.querySelector('.ib');
-  if(b)b.onclick=async()=>{dp.prompt();await dp.userChoice;dp=null;e.hidden=true};
+  const b=e.querySelector('.ib');if(b)b.onclick=async()=>{dp.prompt();await dp.userChoice;dp=null;e.hidden=true};
 }
-window.addEventListener('beforeinstallprompt',ev=>{ev.preventDefault();dp=ev;showIns('<span>Pasang aplikasi ini di layar utama HP Anda.</span><button class="ib">Pasang</button>')});
+window.addEventListener('beforeinstallprompt',ev=>{ev.preventDefault();dp=ev;showIns('<span>Pasang aplikasi ini di layar utama perangkat Anda.</span><button class="ib">Pasang</button>')});
 window.addEventListener('appinstalled',()=>{$('#ins').hidden=true});
 if(/iphone|ipad|ipod/i.test(navigator.userAgent))showIns('<span>Untuk memasang: ketuk ikon <b>Bagikan</b>, lalu pilih <b>Tambahkan ke Layar Utama</b>.</span>');
 
 setNav();
 addEventListener('resize',setNav);
 load();
-if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
 </html>
