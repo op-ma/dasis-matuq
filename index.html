@@ -369,19 +369,18 @@ tr.sub td{font-weight:700;background:var(--acc-soft);color:var(--acc)}
 .xt td:first-child{word-break:break-word}
 .xt td.z{color:#cbd5e1}
 .fq{flex:1;min-width:200px;max-width:380px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:14px;background:#fff}
-.fnote{display:block;color:var(--mut);font-size:12.5px;margin:0 0 10px}
-.fw{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh);overflow-x:auto}
-.ft{width:100%;border-collapse:collapse}
-.ft th{background:#f1ede5;color:var(--b1);font-size:12.5px;text-align:left;padding:9px 10px;white-space:nowrap;position:sticky;top:var(--navh,48px);z-index:2}
-.ft td{padding:8px 10px;border-top:1px solid var(--line);font-size:14px}
-.ft td.nm{font-weight:700;color:var(--b1)}
-.ft td.nw{white-space:nowrap}
-.ft tr.fh td{background:#f6efe0;border-top:2px solid #e3d3ad;font-size:13.5px;line-height:1.7}
-.ft tr.fh b{color:var(--b1)}
-.ft .fb{display:inline-block;background:var(--b1);color:#fff;border-radius:99px;padding:1px 9px;font-size:11.5px;margin:0 6px}
-.ft .fb.w{background:#b45309}
-.ft .fi{margin-right:12px;white-space:nowrap}
-@media(max-width:640px){.ft th,.ft td{padding:7px 6px;font-size:13px}}
+.fnote{display:block;color:var(--mut);font-size:13px;margin:0 0 10px;text-align:left}
+.fam .lst th,.fam .lst td{text-align:left}
+.fam .lst th.cn,.fam .lst td.cn{text-align:center}
+.fam .fb{display:inline-block;background:var(--b1);color:#fff;border-radius:99px;padding:1px 9px;font-size:11.5px;font-weight:600}
+.fam .fb.w{background:#b45309}
+.fam .cw{overflow-x:auto}
+.fam .ct{width:auto;min-width:100%;border-collapse:collapse}
+.fam .ct th{position:static;background:#f1ede5;color:var(--b1);text-align:left;padding:7px 10px;font-size:12.5px;white-space:nowrap}
+.fam .ct td{text-align:left;padding:7px 10px;border-top:1px solid var(--line);font-size:13.5px;white-space:nowrap}
+.fam .ct td.nm{font-weight:700;color:var(--b1)}
+.fam .ct td.L,.fam .ct td.P{font-weight:700}
+.fam .ct tr:first-child th:first-child,.fam .ct td:first-child{width:36px}
 .card .xw{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .xt th,.xt td{padding:8px 6px}
 .xt th{font-size:12.5px;letter-spacing:0}
@@ -1079,6 +1078,7 @@ function srtDir(id){const s=SORT[id]||{c:2,d:1};SORT[id]={c:s.c,d:-s.d};redraw(i
 function redraw(id){
   if(id=='lst')return drawM();
   if(id=='dl')return drawDl();
+  if(id=='fam')return drawFam();
   const el=document.getElementById(id);
   if(!el||!CARDS[id])return;
   const sc=el.querySelector('.scroll'),y=sc?sc.scrollTop:0;
@@ -1385,37 +1385,49 @@ function famGroups(d,basis){
       basis:byKK&&byAy?'No KK & Nama Ayah':byKK?'No KK':'Nama Ayah',warn:!byKK,
       ayah:ay?ay['Nama Ayah']:'',ibu:ib?ib['Nama Ibu']:'',kk:kk?kk['No KK']:'',
       loc:[title(ad['Kelurahan']),title(ad['Kecamatan'])].filter(Boolean).join(', '),
+      kota:m.map(x=>title(x['Kota'])).find(Boolean)||'',key:'fam|'+m.map(dk).sort()[0],
       s:nrm(m.map(x=>x['Nama']+' '+x['Nama Ayah']+' '+x['Nama Ibu']).join(' '))+' '+m.map(x=>x['No KK']).join(' ')});
   });
   out.sort((a,b)=>b.m.length-a.m.length||(a.ayah||'').localeCompare(b.ayah||'','id'));
   return out;
 }
+const FCOLS=[['No'],['Nama Ayah',f=>f.ayah],['Nama Ibu',f=>f.ibu],['No KK',f=>f.kk],['Kota',f=>f.kota],['Anak',f=>f.m.length,'cn'],['Dasar',f=>f.basis]];
 function renderKeluarga(){
-  const d=data(),F=window._fam=famGroups(d,famBasis);
-  const tot=F.reduce((a,f)=>a+f.m.length,0),mx=F.reduce((a,f)=>Math.max(a,f.m.length),0);
-  const k=(l,v)=>`<div class="k" style="cursor:default"><span>${l}</span><b>${v}</b></div>`;
+  const d=data();window._fam=famGroups(d,famBasis);
   const opt=(v,l)=>`<option value="${v}"${famBasis==v?' selected':''}>${l}</option>`;
-  $('#app').innerHTML=`<div class="kpi">${k('Keluarga (≥ 2 anak)',F.length)}${k('Siswa dalam keluarga',tot)}${k('2 anak',F.filter(f=>f.m.length==2).length)}${k('3 anak atau lebih',F.filter(f=>f.m.length>=3).length)}${k('Anak terbanyak',mx||0)}</div>
-  <div class="dtop"><h3>Siswa dalam Satu Keluarga</h3>
+  $('#app').innerHTML=`<div class="dtop"><h3>Data Keluarga · <span id="fcnt"></span></h3>
     <label class="kf">Dasar<select onchange="famBasis=this.value;render()">${opt('both','No KK atau Nama Ayah')}${opt('kk','Hanya No KK')}${opt('ayah','Hanya Nama Ayah')}</select></label>
-    <input class="fq" type="search" placeholder="Cari nama siswa / ayah / ibu / No KK" value="${esc(famQ)}" oninput="famQ=this.value;drawFam()">
-    <div class="acts"><button class="abtn accent" onclick="exportFam()">${ICO.export}<span>Export Data</span></button></div></div>
-  <small class="fnote">Siswa dikelompokkan bila No KK sama atau Nama Ayah sama. Label oranye “Nama Ayah” berarti hanya cocok lewat nama ayah (No KK berbeda/kosong), sebaiknya dicek lagi.</small>
-  <div class="fw" id="fw"></div>`;
+    <input class="fq" type="search" placeholder="Cari nama ayah / ibu / No KK / nama anak" value="${esc(famQ)}" oninput="famQ=this.value;drawFam()">
+    <div class="acts"><button class="abtn" id="fall" onclick="famAll()"></button><button class="abtn accent" onclick="exportFam()">${ICO.export}<span>Export Data</span></button></div></div>
+  <small class="fnote" id="fsum"></small>
+  <div class="lw dl fam" id="famw"></div>`;
   drawFam();
 }
 function famFiltered(){const q=nrm(famQ);return q?window._fam.filter(f=>f.s.includes(q)):window._fam}
+function famList(){
+  const F=famFiltered().slice(),s=SORT.fam;
+  if(s&&FCOLS[s.c]&&FCOLS[s.c][1]){const g=FCOLS[s.c][1];F.sort((a,b)=>{const A=g(a),B=g(b),ea=A===''||A==null,eb=B===''||B==null;if(ea&&!eb)return 1;if(!ea&&eb)return -1;return s.d*cmp(A,B)})}
+  return F;
+}
+function famAll(){const F=famFiltered(),all=F.length&&F.every(f=>OPEN.has(f.key));F.forEach(f=>all?OPEN.delete(f.key):OPEN.add(f.key));drawFam()}
 function drawFam(){
-  const F=famFiltered(),td=(c,v)=>`<td${c?` class="${c}"`:''}>${v}</td>`;
-  let n=0;
+  const F=famList(),w=$('#famw');if(!w)return;
+  const tot=F.reduce((a,f)=>a+f.m.length,0),c=n=>F.filter(f=>n==4?f.m.length>=4:f.m.length==n).length;
+  $('#fcnt').textContent=F.length+' keluarga';
+  $('#fsum').textContent=tot+' siswa · 2 anak: '+c(2)+' · 3 anak: '+c(3)+' · 4 anak atau lebih: '+c(4)+' — klik nomor urut untuk melihat daftar anak. Label oranye “Nama Ayah” = hanya cocok lewat nama ayah, sebaiknya dicek.';
+  $('#fall').textContent=F.length&&F.every(f=>OPEN.has(f.key))?'Sembunyikan semua':'Tampilkan semua';
+  if(!F.length){w.innerHTML='<div style="padding:28px;color:var(--mut)">Tidak ada keluarga yang cocok.</div>';return}
+  const kh=['No','Nama Siswa','NISN','Kelas','Markaz','JK','Tempat, Tanggal Lahir','Umur','Anak Ke','Nama Ibu','No KK','Desa, Kecamatan'];
   const rows=F.map((f,i)=>{
-    const head=`<tr class="fh"><td colspan="8"><b>Keluarga ${i+1}</b> · ${f.m.length} anak<span class="fb${f.warn?' w':''}">${f.basis}</span><span class="fi">Ayah: <b>${esc(f.ayah)||'-'}</b></span><span class="fi">Ibu: <b>${esc(f.ibu)||'-'}</b></span><span class="fi">No KK: ${esc(f.kk)||'-'}</span>${f.loc?`<span class="fi">${esc(f.loc)}</span>`:''}</td></tr>`;
-    return head+f.m.map(x=>`<tr>${td('',++n)}${td('nm',esc(x['Nama']))}${td('',esc(x['NISN'])||'-')}${td('nw',esc(x['Kelas'])||'-')}${td('',esc(x._mk))}${td(x['Gender'],x['Gender'])}${td('',esc(x['Nama Ayah'])||'-')}${td('',esc(x['Nama Ibu'])||'-')}</tr>`).join('');
+    const op=OPEN.has(f.key);
+    const main=`<tr class="mr${op?' open':''}" data-k="${esc(f.key)}"><td data-l="No" class="nt cn" onclick="tgr(this.parentNode)" title="Klik untuk lihat daftar anak"><span class="tg-ico">${ICO.chevRight}</span> ${i+1}</td><td data-l="Nama Ayah" class="nm">${esc(f.ayah)||'-'}</td><td data-l="Nama Ibu">${esc(f.ibu)||'-'}</td><td data-l="No KK" class="nw">${esc(f.kk)||'-'}</td><td data-l="Kota">${esc(f.kota)||'-'}</td><td data-l="Anak" class="cn">${f.m.length}</td><td data-l="Dasar"><span class="fb${f.warn?' w':''}">${f.basis}</span></td></tr>`;
+    const kids=f.m.map((x,j)=>`<tr><td>${j+1}</td><td class="nm">${esc(x['Nama'])}</td><td>${esc(x['NISN'])||'-'}</td><td>${esc(x['Kelas'])||'-'}</td><td>${esc(x._mk)}</td><td class="${x['Gender']}">${x['Gender']}</td><td>${esc(ttl(x))||'-'}</td><td>${ageStr(x)}</td><td>${esc(anak(x))||'-'}</td><td>${esc(x['Nama Ibu'])||'-'}</td><td>${esc(x['No KK'])||'-'}</td><td>${esc([title(x['Kelurahan']),title(x['Kecamatan'])].filter(Boolean).join(', '))||'-'}</td></tr>`).join('');
+    return main+`<tr class="dr${op?' open':''}"><td colspan="7"><div class="cw"><table class="ct"><tr>${kh.map(h=>`<th>${h}</th>`).join('')}</tr>${kids}</table></div></td></tr>`;
   }).join('');
-  $('#fw').innerHTML=F.length?`<table class="ft"><tr><th>No</th><th>Nama Siswa</th><th>NISN</th><th>Kelas</th><th>Markaz</th><th>JK</th><th>Nama Ayah</th><th>Nama Ibu</th></tr>${rows}</table>`:'<div style="padding:28px;text-align:center;color:var(--mut)">Tidak ada keluarga yang cocok.</div>';
+  w.innerHTML=`<table class="lst"><tr>${FCOLS.map((c,i)=>i?th('fam',i,c[0],c[2]):'<th class="cn">No</th>').join('')}</tr>${rows}</table>`;
 }
 function exportFam(){
-  const F=famFiltered();if(!F.length)return;
+  const F=famList();if(!F.length)return;
   const asText=v=>v?`="${String(v).replace(/"/g,'""')}"`:'';
   const escCsv=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
   const hd=['Keluarga','Dasar','Jumlah Anak','Nama Ayah (Keluarga)','Nama Ibu (Keluarga)','No KK (Keluarga)','Nama Siswa','NISN','Kelas','Markaz','JK','Nama Ayah','Nama Ibu'];
