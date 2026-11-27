@@ -1081,7 +1081,8 @@ const data=()=>ALL.filter(x=>(mk=='Semua'||x._mk==mk)&&(jj=='Semua'||x._jj==jj))
 function group(list,fn){const m={};list.forEach(x=>{const k=fn(x)||'Tidak diisi';(m[k]=m[k]||[]).push(x)});return m}
 
 const SORT={},CARDS={};
-const cmp=(a,b)=>(typeof a=='number'&&typeof b=='number')?a-b:String(a==null?'':a).localeCompare(String(b==null?'':b),'id',{numeric:true,sensitivity:'base'});
+const COL=new Intl.Collator('id',{numeric:true,sensitivity:'base'});
+const cmp=(a,b)=>(typeof a=='number'&&typeof b=='number')?a-b:COL.compare(String(a==null?'':a),String(b==null?'':b));
 const sid=t=>'c'+t.replace(/[^a-z0-9]/gi,'');
 function th(id,i,label,cls){const s=SORT[id],on=s&&s.c===i;return `<th class="so${on?' on':''}${cls?' '+cls:''}" onclick="srt('${id}',${i})">${label}<i>${on?(s.d>0?'▲':'▼'):'⇅'}</i></th>`}
 function srt(id,i){const s=SORT[id];SORT[id]=s&&s.c===i?{c:i,d:-s.d}:{c:i,d:1};redraw(id)}
@@ -1307,7 +1308,7 @@ function render(){
     const kl=[...new Set(d0.map(x=>x['Kelas']||'').filter(Boolean))].sort((a,b)=>parseInt(a)-parseInt(b)||a.localeCompare(b,'id',{numeric:true}));
     if(kf!='Semua'&&!kl.includes(kf))kf='Semua';
     const dd=kf=='Semua'?d0:d0.filter(x=>(x['Kelas']||'')==kf);
-    window._dl=dd.slice().sort((a,b)=>a['Nama'].localeCompare(b['Nama']));
+    window._dl=dd.slice().sort((a,b)=>COL.compare(a['Nama'],b['Nama']));
     const expLabel = `Siswa_${jj=='Semua'?'MA_MTs':jj}_${mk=='Semua'?'Semua_Markaz':mk}${kf!='Semua'?'_Kelas_'+kf:''}`;
 
     $('#app').innerHTML=`
@@ -1380,7 +1381,7 @@ function famGroups(d,basis){
   const find=i=>{while(par[i]!==i){par[i]=par[par[i]];i=par[i]}return i};
   const link=kf=>{const m=new Map();d.forEach((x,i)=>{const k=kf(x);if(!k)return;if(m.has(k)){const a=find(m.get(k)),b=find(i);if(a!==b)par[b]=a}else m.set(k,i)})};
   const kkOf=x=>/^(?!0+$)\d{16}$/.test(x['No KK']||'')?x['No KK']:'';
-  const ayOf=x=>{const a=nrm(x['Nama Ayah']);return a.length>=5&&!/^(tidak|belum|none|null|nan)\b/.test(a)?a:''};
+  const ayOf=x=>x._ay!==undefined?x._ay:(x._ay=(a=>a.length>=5&&!/^(tidak|belum|none|null|nan)\b/.test(a)?a:'')(nrm(x['Nama Ayah'])));
   if(basis!='ayah')link(kkOf);
   if(basis!='kk')link(ayOf);
   const gs=new Map();
@@ -1400,7 +1401,7 @@ function famGroups(d,basis){
       ayah:ay?ay['Nama Ayah']:'',ibu:ib?ib['Nama Ibu']:'',kk:kk?kk['No KK']:'',
       loc:[title(ad['Kelurahan']),title(ad['Kecamatan'])].filter(Boolean).join(', '),
       kota:m.map(x=>title(x['Kota'])).find(Boolean)||'',key:'fam|'+m.map(dk).sort()[0],
-      s:nrm(m.map(x=>x['Nama']+' '+x['Nama Ayah']+' '+x['Nama Ibu']).join(' '))+' '+m.map(x=>x['No KK']).join(' ')});
+      });
   });
   out.sort((a,b)=>b.m.length-a.m.length||(a.ayah||'').localeCompare(b.ayah||'','id'));
   return out;
@@ -1440,7 +1441,7 @@ function pegKelCard(p){
   };
   return CARDS[id]();
 }
-function famFiltered(){const q=nrm(famQ);return q?window._fam.filter(f=>f.s.includes(q)):window._fam}
+function famFiltered(){const q=nrm(famQ);return q?window._fam.filter(f=>(f.s??(f.s=nrm(f.m.map(x=>x['Nama']+' '+x['Nama Ayah']+' '+x['Nama Ibu']).join(' '))+' '+f.m.map(x=>x['No KK']).join(' '))).includes(q)):window._fam}
 function famList(){
   const F=famFiltered().slice(),s=SORT.fam;
   if(s&&FCOLS[s.c]&&FCOLS[s.c][1]){const g=FCOLS[s.c][1];F.sort((a,b)=>{const A=g(a),B=g(b),ea=A===''||A==null,eb=B===''||B==null;if(ea&&!eb)return 1;if(!ea&&eb)return -1;return s.d*cmp(A,B)})}
@@ -1458,8 +1459,10 @@ function drawFam(){
   const rows=F.map((f,i)=>{
     const op=OPEN.has(f.key);
     const main=`<tr class="mr${op?' open':''}" data-k="${esc(f.key)}"><td data-l="No" class="nt cn" onclick="tgr(this.parentNode)" title="Klik untuk lihat daftar anak"><span class="tg-ico">${ICO.chevRight}</span> ${i+1}</td><td data-l="Nama Ayah" class="nm">${esc(f.ayah)||'-'}</td><td data-l="Nama Ibu">${esc(f.ibu)||'-'}</td><td data-l="No KK" class="nw">${esc(f.kk)||'-'}</td><td data-l="Kota">${esc(f.kota)||'-'}</td><td data-l="Anak" class="cn">${f.m.length}</td><td data-l="Dasar"><span class="fb${f.warn?' w':''}">${f.basis}</span></td></tr>`;
-    const kids=f.m.map((x,j)=>`<tr><td>${j+1}</td><td class="nm">${esc(x['Nama'])}</td><td>${esc(x['NISN'])||'-'}</td><td>${esc(x['Kelas'])||'-'}</td><td>${esc(x._mk)}</td><td class="${x['Gender']}">${x['Gender']}</td><td>${esc(ttl(x))||'-'}</td><td>${ageStr(x)}</td><td>${esc(anak(x))||'-'}</td><td>${esc(x['Nama Ibu'])||'-'}</td><td>${esc(x['No KK'])||'-'}</td><td>${esc([title(x['Kelurahan']),title(x['Kecamatan'])].filter(Boolean).join(', '))||'-'}</td></tr>`).join('');
-    return main+`<tr class="dr${op?' open':''}"><td colspan="7"><div class="cw"><table class="ct"><tr>${kh.map(h=>`<th>${h}</th>`).join('')}</tr>${kids}</table></div></td></tr>`;
+    const kidsFn=()=>f.m.map((x,j)=>`<tr><td>${j+1}</td><td class="nm">${esc(x['Nama'])}</td><td>${esc(x['NISN'])||'-'}</td><td>${esc(x['Kelas'])||'-'}</td><td>${esc(x._mk)}</td><td class="${x['Gender']}">${x['Gender']}</td><td>${esc(ttl(x))||'-'}</td><td>${ageStr(x)}</td><td>${esc(anak(x))||'-'}</td><td>${esc(x['Nama Ibu'])||'-'}</td><td>${esc(x['No KK'])||'-'}</td><td>${esc([title(x['Kelurahan']),title(x['Kecamatan'])].filter(Boolean).join(', '))||'-'}</td></tr>`).join('');
+    const det=()=>`<div class="cw"><table class="ct"><tr>${kh.map(h=>`<th>${h}</th>`).join('')}</tr>${kidsFn()}</table></div>`;
+    LZ[f.key]=det;
+    return main+`<tr class="dr${op?' open':''}"${op?'':' data-lz="1"'}><td colspan="7">${op?det():''}</td></tr>`;
   }).join('');
   w.innerHTML=`<table class="lst"><tr>${FCOLS.map((c,i)=>i?th('fam',i,c[0],c[2]):'<th class="cn">No</th>').join('')}</tr>${rows}</table>`;
 }
@@ -1503,7 +1506,8 @@ function openM(t,list,sub,extra){
 
 const BLN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const title=t=>(t||'').toLowerCase().replace(/(^|[\s\-\/(])([a-z])/g,(m,a,b)=>a+b.toUpperCase());
+const _tc={};
+const title=t=>{t=t||'';return t in _tc?_tc[t]:(_tc[t]=t.toLowerCase().replace(/(^|[\s\-\/(])([a-z])/g,(m,a,b)=>a+b.toUpperCase()))};
 function tgl(v){
   v=(v||'').trim();let d,m,y,r;
   if(r=/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/.exec(v)){d=r[1];m=r[2];y=r[3]}
@@ -1711,7 +1715,7 @@ function lstHTML(id,list){
     const k=full?dk(x):'',op=full&&OPEN.has(k);
     const main=`<tr${full?` class="mr${op?' open':''}" data-k="${esc(k)}"`:''}><td data-l="No"${full?` class="nt" onclick="tgr(this.parentNode)" title="Klik untuk lihat detail"`:''}>${full?`<span class="tg-ico">${ICO.chevRight}</span> `:''}${n+1}</td>${cols.slice(1).map(c=>c[3](x)).join('')}</tr>`;
     if(!full)return main;
-    return main+`<tr class="dr${op?' open':''}"><td colspan="${cols.length}">
+    const det=()=>`
       <div class="dg">
         <div class="dg-sec">Data Siswa</div>
         ${f('NIS',x['NIS'])}
@@ -1742,16 +1746,19 @@ function lstHTML(id,list){
           ${f('Pendidikan Ibu',x['Pendidikan Ibu'])}
           ${f('Penghasilan Ibu',x['Penghasilan Ibu'])}
         </div></details>
-      </div>
-    </td></tr>`;
+      </div>`;
+    LZ[k]=det;
+    return main+`<tr class="dr${op?' open':''}"${op?'':' data-lz="1"'}><td colspan="${cols.length}">${op?det():''}</td></tr>`;
   };
   return bar+`<table class="lst"><tr>${cols.map((c,i)=>i?th(id,i,c[0],c[2]):'<th>No</th>').join('')}</tr>${a.map(rowH).join('')}</table>`;
 }
 
 let OPEN=new Set();
+const LZ={};
 const dk=x=>x['ID']||x['NISN']||x['Nama'];
 function tgr(tr){
-  const k=tr.dataset.k,o=!tr.classList.contains('open');
+  const k=tr.dataset.k,o=!tr.classList.contains('open'),dr=tr.nextElementSibling;
+  if(o&&dr.dataset.lz&&LZ[k]){dr.firstElementChild.innerHTML=LZ[k]();delete dr.dataset.lz}
   tr.classList.toggle('open',o);
   tr.nextElementSibling.classList.toggle('open',o);
   o?OPEN.add(k):OPEN.delete(k);
