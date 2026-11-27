@@ -498,6 +498,13 @@ small.wk{display:block;font-size:12.5px;font-weight:400;color:var(--mut);margin-
   border-bottom:2px solid var(--line);
 }
 .dg{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px 20px}
+.dmore{grid-column:1/-1;margin-top:4px}
+.dmore summary{cursor:pointer;font-weight:700;color:var(--b1);font-size:13.5px;padding:6px 0}
+.dmore .dg{margin-top:8px}
+.dsrch{display:flex;flex:1;min-width:220px;max-width:420px}
+.dsrch input{flex:1;min-width:0;padding:8px 12px;border:1px solid var(--line);border-right:0;border-radius:10px 0 0 10px;font:inherit;font-size:14px;background:#fff}
+.dsrch button{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--b1);background:var(--b1);color:#fff;border-radius:0 10px 10px 0;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.dsrch button svg{width:16px;height:16px}
 .dg-sec{
   grid-column:1/-1;
   font-family:var(--font-serif);
@@ -1050,7 +1057,7 @@ async function load(manual=false){
     }catch(_){
       // Jika kuota localStorage penuh, simpan versi ringkas tanpa kolom ekstra
       try{
-        const slim=ALL.map(({_mk,_jj,Nama,Sekolah,Tingkat,Kelas,Gender,NIS,NISN,NIK,'No KK':NoKK,'Nama Arab':NamaArab,'Tempat Lahir':TempatLahir,'Tanggal Lahir':TanggalLahir,'Nama Ayah':NamaAyah,'NIK Ayah':NIKAyah,'TTL Ayah':TTLAyah,'Pendidikan Ayah':PendAyah,'Pekerjaan Ayah':PekAyah,'Penghasilan Ayah':PengAyah,'Nama Ibu':NamaIbu,'NIK Ibu':NIKIbu,'TTL Ibu':TTLIbu,'Pendidikan Ibu':PendIbu,'Pekerjaan Ibu':PekIbu,'Penghasilan Ibu':PengIbu,'Alamat':Alamat,'RT':RT,'RW':RW,'Kelurahan':Kelurahan,'Kecamatan':Kecamatan,'Kota':Kota,'Provinsi':Provinsi,'Kode Pos':KodePos,'Status Yatim':StatusYatim,'Jenis Yatim':JenisYatim,'Anak Pegawai':AnakPegawai,'Nama Pegawai':NamaPegawai})=>({_mk,_jj,Nama,Sekolah,Tingkat,Kelas,Gender,NIS,NISN,NIK,'No KK':NoKK,'Nama Arab':NamaArab,'Tempat Lahir':TempatLahir,'Tanggal Lahir':TanggalLahir,'Nama Ayah':NamaAyah,'NIK Ayah':NIKAyah,'TTL Ayah':TTLAyah,'Pendidikan Ayah':PendAyah,'Pekerjaan Ayah':PekAyah,'Penghasilan Ayah':PengAyah,'Nama Ibu':NamaIbu,'NIK Ibu':NIKIbu,'TTL Ibu':TTLIbu,'Pendidikan Ibu':PendIbu,'Pekerjaan Ibu':PekIbu,'Penghasilan Ibu':PengIbu,Alamat,RT,RW,Kelurahan,Kecamatan,Kota,Provinsi,'Kode Pos':KodePos,'Status Yatim':StatusYatim,'Jenis Yatim':JenisYatim,'Anak Pegawai':AnakPegawai,'Nama Pegawai':NamaPegawai}));
+        const slim=ALL.map(({_mk,_jj,Nama,Sekolah,Tingkat,Kelas,Gender,NIS,NISN,NIK,'No KK':NoKK,'Nama Arab':NamaArab,'Tempat Lahir':TempatLahir,'Tanggal Lahir':TanggalLahir,'Nama Ayah':NamaAyah,'NIK Ayah':NIKAyah,'TTL Ayah':TTLAyah,'Pendidikan Ayah':PendAyah,'Pekerjaan Ayah':PekAyah,'Penghasilan Ayah':PengAyah,'Nama Ibu':NamaIbu,'NIK Ibu':NIKIbu,'TTL Ibu':TTLIbu,'Pendidikan Ibu':PendIbu,'Pekerjaan Ibu':PekIbu,'Penghasilan Ibu':PengIbu,'Alamat':Alamat,'RT':RT,'RW':RW,'Kelurahan':Kelurahan,'Kecamatan':Kecamatan,'Kota':Kota,'Provinsi':Provinsi,'Kode Pos':KodePos,'Status Yatim':StatusYatim,'Jenis Yatim':JenisYatim,'Anak Pegawai':AnakPegawai,'Nama Pegawai':NamaPegawai,'Anak Ke':AnakKe,'Jml Saudara':JmlSaudara,'Nama Sekolah Asal':SekolahAsal})=>({_mk,_jj,Nama,Sekolah,Tingkat,Kelas,Gender,NIS,NISN,NIK,'No KK':NoKK,'Nama Arab':NamaArab,'Tempat Lahir':TempatLahir,'Tanggal Lahir':TanggalLahir,'Nama Ayah':NamaAyah,'NIK Ayah':NIKAyah,'TTL Ayah':TTLAyah,'Pendidikan Ayah':PendAyah,'Pekerjaan Ayah':PekAyah,'Penghasilan Ayah':PengAyah,'Nama Ibu':NamaIbu,'NIK Ibu':NIKIbu,'TTL Ibu':TTLIbu,'Pendidikan Ibu':PendIbu,'Pekerjaan Ibu':PekIbu,'Penghasilan Ibu':PengIbu,Alamat,RT,RW,Kelurahan,Kecamatan,Kota,Provinsi,'Kode Pos':KodePos,'Status Yatim':StatusYatim,'Jenis Yatim':JenisYatim,'Anak Pegawai':AnakPegawai,'Nama Pegawai':NamaPegawai,'Anak Ke':AnakKe,'Jml Saudara':JmlSaudara,'Nama Sekolah Asal':SekolahAsal}));
         localStorage.setItem('ma_cache',JSON.stringify({t:Date.now(),d:slim,cols:SHEET_COLS}));
       }catch(__){}
     }
@@ -1305,13 +1312,14 @@ function render(){
 
     $('#app').innerHTML=`
       <div class="dtop">
-        <h3>Data Siswa · ${dd.length} siswa</h3>
+        <h3>Data Siswa · <span id="dlcnt">${dd.length} siswa</span></h3>
         <label class="kf">Kelas
           <select onchange="kf=this.value;render()">
             <option value="Semua">Semua kelas</option>
             ${kl.map(k=>`<option value="${esc(k)}"${k==kf?' selected':''}>${esc(k)}</option>`).join('')}
           </select>
         </label>
+        <div class="dsrch"><input id="dlq" type="search" placeholder="Cari nama / NIS / NISN / nama ayah / ibu" value="${esc(dlQ)}" oninput="dlQ=this.value;drawDl()" onkeydown="if(event.key=='Enter')drawDl()"><button type="button" onclick="drawDl();$('#dlq').focus()" aria-label="Cari">${ICO.search||'&#128269;'}<span>Cari</span></button></div>
         <small>Klik nomor urut untuk detail lengkap &amp; data orang tua</small>
         <div class="acts">
           <button class="abtn accent" onclick="exportCSV(window._dl,'${esc(expLabel)}')" title="Export data terfilter ke Excel/CSV">
@@ -1364,7 +1372,7 @@ function render(){
   $('#app').innerHTML=h+'</div>';
 }
 
-let famBasis='both',famQ='';
+let famBasis='both',famQ='',dlQ='';
 const nrm=v=>(v||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
 const FRANK={VII:1,VIII:2,IX:3,X:4,XI:5,XII:6};
 function famGroups(d,basis){
@@ -1569,7 +1577,8 @@ function cardS(x){
   if(cariMode==='wilayah'){
     const rawKota=(x['Kota']||'').trim();
     const isKota=/^kota\b/i.test(rawKota);
-    const kotaStr=rawKota?(isKota?title(rawKota):'Kab. '+title(rawKota)):'';
+    const kabM=/^(kabupaten|kab)\b\.?\s*/i.exec(rawKota);
+    const kotaStr=rawKota?(isKota?title(rawKota):'Kab. '+title(kabM?rawKota.slice(kabM[0].length):rawKota)):'';
     const kecStr=x['Kecamatan']?'Kec. '+title(x['Kecamatan']):'';
     const kelStr=x['Kelurahan']?(isKota?'Kel. ':'Desa ')+title(x['Kelurahan']):'';
     const wilGabung=[kotaStr,kecStr,kelStr].filter(Boolean).join(', ');
@@ -1704,31 +1713,35 @@ function lstHTML(id,list){
     if(!full)return main;
     return main+`<tr class="dr${op?' open':''}"><td colspan="${cols.length}">
       <div class="dg">
-        <div class="dg-sec">Identitas Siswa &amp; Keluarga</div>
+        <div class="dg-sec">Data Siswa</div>
         ${f('NIS',x['NIS'])}
         ${f('NISN',x['NISN'])}
-        ${f('NIK',x['NIK'])}
-        ${f('No KK',x['No KK'])}
-        ${f('Anak Ke / Jml Saudara',anak(x))}
-        ${f('Nama Arab',x['Nama Arab'],'w')}
-        <div class="dg-sec">Data Ayah</div>
-        ${f('Nama Ayah',x['Nama Ayah'])}
-        ${f('NIK Ayah',x['NIK Ayah'])}
-        ${f('Tanggal Lahir Ayah',x['Tanggal Lahir Ayah'])}
-        ${f('TTL Ayah',x['TTL Ayah'])}
-        ${f('Pendidikan Ayah',x['Pendidikan Ayah'])}
-        ${f('Pekerjaan Ayah',x['Pekerjaan Ayah'])}
-        ${f('Penghasilan Ayah',x['Penghasilan Ayah'])}
-        <div class="dg-sec">Data Ibu</div>
-        ${f('Nama Ibu',x['Nama Ibu'])}
-        ${f('NIK Ibu',x['NIK Ibu'])}
-        ${f('Tanggal Lahir Ibu',x['Tanggal Lahir Ibu'])}
-        ${f('TTL Ibu',x['TTL Ibu'])}
-        ${f('Pendidikan Ibu',x['Pendidikan Ibu'])}
-        ${f('Pekerjaan Ibu',x['Pekerjaan Ibu'])}
-        ${f('Penghasilan Ibu',x['Penghasilan Ibu'])}
-        <div class="dg-sec">Alamat Tempat Tinggal</div>
+        ${f('Nama',x['Nama'])}
+        ${f('Jenis Kelamin',JK(x['Gender']))}
+        ${f('Tempat, Tanggal Lahir',ttl(x))}
+        ${f('Anak Ke',(x['Anak Ke']||'').trim())}
+        ${f('Jumlah Saudara',(x['Jml Saudara']||'').trim())}
+        ${f('Nama Sekolah Asal',x['Nama Sekolah Asal'])}
+        <div class="dg-sec">Alamat Lengkap Siswa</div>
         ${f('Alamat Lengkap',alamat(x),'full')}
+        <div class="dg-sec">Orang Tua</div>
+        ${f('Nama Ayah',x['Nama Ayah'])}
+        ${f('Pekerjaan Ayah',x['Pekerjaan Ayah'])}
+        ${f('Nama Ibu',x['Nama Ibu'])}
+        ${f('Pekerjaan Ibu',x['Pekerjaan Ibu'])}
+        <details class="dmore"><summary>Data lainnya</summary><div class="dg">
+          ${f('NIK',x['NIK'])}
+          ${f('No KK',x['No KK'])}
+          ${f('Nama Arab',x['Nama Arab'],'w')}
+          ${f('NIK Ayah',x['NIK Ayah'])}
+          ${f('TTL Ayah',x['TTL Ayah'])}
+          ${f('Pendidikan Ayah',x['Pendidikan Ayah'])}
+          ${f('Penghasilan Ayah',x['Penghasilan Ayah'])}
+          ${f('NIK Ibu',x['NIK Ibu'])}
+          ${f('TTL Ibu',x['TTL Ibu'])}
+          ${f('Pendidikan Ibu',x['Pendidikan Ibu'])}
+          ${f('Penghasilan Ibu',x['Penghasilan Ibu'])}
+        </div></details>
       </div>
     </td></tr>`;
   };
@@ -1744,7 +1757,16 @@ function tgr(tr){
   o?OPEN.add(k):OPEN.delete(k);
 }
 function drawM(){$('#mc').textContent=curList.length+' siswa'+(curSub?' · '+curSub:'');$('#ml').innerHTML=lstHTML('lst',curList)}
-function drawDl(){const e=$('#dlw');if(e)e.innerHTML=lstHTML('dl',window._dl)}
+function dlFiltered(){
+  const q=nrm(dlQ);if(!q)return window._dl;
+  return window._dl.filter(x=>nrm([x['Nama'],x['NIS'],x['NISN'],x['Nama Ayah'],x['Nama Ibu'],x['Kelas']].join(' ')).includes(q));
+}
+function drawDl(){
+  const e=$('#dlw');if(!e)return;
+  const f=dlFiltered();
+  const c=$('#dlcnt');if(c)c.textContent=f.length+' siswa'+(f.length!=window._dl.length?' dari '+window._dl.length:'');
+  e.innerHTML=f.length?lstHTML('dl',f):'<div style="padding:28px;color:var(--mut)">Tidak ada siswa yang cocok.</div>';
+}
 function closeM(){render();window.scrollTo(0,lastY)}
 
 let prevTab='siswa';
