@@ -368,24 +368,39 @@ tr.sub td{font-weight:700;background:var(--acc-soft);color:var(--acc)}
 .scroll tr.tot td{position:sticky;bottom:0;box-shadow:0 -1px 0 var(--line)}
 .xt td:first-child{word-break:break-word}
 .xt td.z{color:#cbd5e1}
+.pkc .lw{border:0;box-shadow:none;padding:0;background:none}
 .pk th,.pk td{text-align:left;vertical-align:top}
 .pk th.cn,.pk td.cn{text-align:center}
 .pk td.nm{font-weight:700;color:var(--b1)}
 .pk .ch{padding:2px 0;white-space:nowrap}
 .pk .ch span{color:var(--mut);font-size:13px}
 .fq{flex:1;min-width:200px;max-width:380px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:14px;background:#fff}
+.apills{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.apills button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:6px 14px;font:inherit;font-size:13.5px;font-weight:600;color:var(--b1);cursor:pointer}
+.apills button.on{background:var(--b1);color:#fff;border-color:var(--b1)}
+.apills button b{margin-left:6px;opacity:.75}
+.asec{display:flex;align-items:baseline;gap:12px;margin:18px 0 8px;flex-wrap:wrap}
+.asec h4{margin:0;font-size:16px;color:var(--b1)}
+.asec span{color:var(--mut);font-size:13px}
 .fnote{display:block;color:var(--mut);font-size:13px;margin:0 0 10px;text-align:left}
 .fam .lst th,.fam .lst td{text-align:left}
 .fam .lst th.cn,.fam .lst td.cn{text-align:center}
 .fam .fb{display:inline-block;background:var(--b1);color:#fff;border-radius:99px;padding:1px 9px;font-size:11.5px;font-weight:600}
 .fam .fb.w{background:#b45309}
-.fam .cw{overflow-x:auto}
-.fam .ct{width:auto;min-width:100%;border-collapse:collapse}
-.fam .ct th{position:static;background:#f1ede5;color:var(--b1);text-align:left;padding:7px 10px;font-size:12.5px;white-space:nowrap}
-.fam .ct td{text-align:left;padding:7px 10px;border-top:1px solid var(--line);font-size:13.5px;white-space:nowrap}
+.fam .lst tr.dr>td{padding:12px 24px 18px 48px;border-bottom:2px solid var(--line)}
+.fam .cw{background:#fff;border:1px solid var(--line);border-radius:10px;overflow-x:auto}
+.fam .ct{width:100%;min-width:0;table-layout:auto;border-collapse:collapse}
+.fam .lst .ct th{position:static;background:#f1ede5;color:var(--b1);text-align:left;padding:10px 12px;font-size:12.5px;white-space:normal;vertical-align:bottom;box-shadow:none}
+.fam .lst .ct td{text-align:left;padding:9px 12px;border-top:1px solid var(--line);font-size:13.5px;white-space:normal;vertical-align:top;line-height:1.4}
+.fam .lst .ct td.nw{white-space:nowrap}
+.fam .lst .ct td.nm{min-width:150px}
+.fam .ct .sub{display:block;color:var(--mut);font-size:12.5px;margin-top:1px}
 .fam .ct td.nm{font-weight:700;color:var(--b1)}
 .fam .ct td.L,.fam .ct td.P{font-weight:700}
-.fam .ct tr:first-child th:first-child,.fam .ct td:first-child{width:36px}
+.fam .ct th:first-child,.fam .ct td:first-child{width:40px;text-align:center}
+.fam .lst th.al,.fam .lst td.al{white-space:normal;min-width:260px;max-width:460px;line-height:1.45}
+.fam .lst td.np{white-space:nowrap;font-variant-numeric:tabular-nums}
+@media(max-width:640px){.fam .lst tr.dr>td{padding:10px 8px 14px}.fam .lst td.al{min-width:0;max-width:none;text-align:right}}
 .card .xw{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .xt th,.xt td{padding:8px 6px}
 .xt th{font-size:12.5px;letter-spacing:0}
@@ -653,6 +668,7 @@ small.wk{display:block;font-size:12.5px;font-weight:400;color:var(--mut);margin-
   <button class="tab" data-t="ortu"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Orang Tua</button>
   <button class="tab" data-t="yatim"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Yatim</button>
   <button class="tab" data-t="keluarga"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>Keluarga</button>
+  <button class="tab" data-t="asal"><svg viewBox="0 0 24 24"><path d="M3 9l9-5 9 5-9 5-9-5z"/><path d="M7 11.5V16c0 1.2 2.2 3 5 3s5-1.8 5-3v-4.5"/><path d="M21 9v5"/></svg>Sekolah Asal</button>
   <button class="tab" data-t="pegawai"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Pegawai</button>
   <button class="tab" data-t="wilayah"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Wilayah</button>
 </nav>
@@ -1057,7 +1073,7 @@ async function load(manual=false){
     }catch(_){
       // Jika kuota localStorage penuh, simpan versi ringkas tanpa kolom ekstra
       try{
-        const slim=ALL.map(({_mk,_jj,Nama,Sekolah,Tingkat,Kelas,Gender,NIS,NISN,NIK,'No KK':NoKK,'Nama Arab':NamaArab,'Tempat Lahir':TempatLahir,'Tanggal Lahir':TanggalLahir,'Nama Ayah':NamaAyah,'NIK Ayah':NIKAyah,'TTL Ayah':TTLAyah,'Pendidikan Ayah':PendAyah,'Pekerjaan Ayah':PekAyah,'Penghasilan Ayah':PengAyah,'Nama Ibu':NamaIbu,'NIK Ibu':NIKIbu,'TTL Ibu':TTLIbu,'Pendidikan Ibu':PendIbu,'Pekerjaan Ibu':PekIbu,'Penghasilan Ibu':PengIbu,'Alamat':Alamat,'RT':RT,'RW':RW,'Kelurahan':Kelurahan,'Kecamatan':Kecamatan,'Kota':Kota,'Provinsi':Provinsi,'Kode Pos':KodePos,'Status Yatim':StatusYatim,'Jenis Yatim':JenisYatim,'Anak Pegawai':AnakPegawai,'Nama Pegawai':NamaPegawai,'Anak Ke':AnakKe,'Jml Saudara':JmlSaudara,'Nama Sekolah Asal':SekolahAsal})=>({_mk,_jj,Nama,Sekolah,Tingkat,Kelas,Gender,NIS,NISN,NIK,'No KK':NoKK,'Nama Arab':NamaArab,'Tempat Lahir':TempatLahir,'Tanggal Lahir':TanggalLahir,'Nama Ayah':NamaAyah,'NIK Ayah':NIKAyah,'TTL Ayah':TTLAyah,'Pendidikan Ayah':PendAyah,'Pekerjaan Ayah':PekAyah,'Penghasilan Ayah':PengAyah,'Nama Ibu':NamaIbu,'NIK Ibu':NIKIbu,'TTL Ibu':TTLIbu,'Pendidikan Ibu':PendIbu,'Pekerjaan Ibu':PekIbu,'Penghasilan Ibu':PengIbu,Alamat,RT,RW,Kelurahan,Kecamatan,Kota,Provinsi,'Kode Pos':KodePos,'Status Yatim':StatusYatim,'Jenis Yatim':JenisYatim,'Anak Pegawai':AnakPegawai,'Nama Pegawai':NamaPegawai,'Anak Ke':AnakKe,'Jml Saudara':JmlSaudara,'Nama Sekolah Asal':SekolahAsal}));
+        const slim=ALL.map(({_mk,_jj,Nama,Sekolah,Tingkat,Kelas,Gender,NIS,NISN,NIK,'No KK':NoKK,'Nama Arab':NamaArab,'Tempat Lahir':TempatLahir,'Tanggal Lahir':TanggalLahir,'Nama Ayah':NamaAyah,'NIK Ayah':NIKAyah,'TTL Ayah':TTLAyah,'Pendidikan Ayah':PendAyah,'Pekerjaan Ayah':PekAyah,'Penghasilan Ayah':PengAyah,'Nama Ibu':NamaIbu,'NIK Ibu':NIKIbu,'TTL Ibu':TTLIbu,'Pendidikan Ibu':PendIbu,'Pekerjaan Ibu':PekIbu,'Penghasilan Ibu':PengIbu,'Alamat':Alamat,'RT':RT,'RW':RW,'Kelurahan':Kelurahan,'Kecamatan':Kecamatan,'Kota':Kota,'Provinsi':Provinsi,'Kode Pos':KodePos,'Status Yatim':StatusYatim,'Jenis Yatim':JenisYatim,'Anak Pegawai':AnakPegawai,'Nama Pegawai':NamaPegawai,'Anak Ke':AnakKe,'Jml Saudara':JmlSaudara,'Nama Sekolah Asal':SekolahAsal,'NPSN Sekolah Asal':NpsnAsal,'Alamat Sekolah Asal':AlamatAsal})=>({_mk,_jj,Nama,Sekolah,Tingkat,Kelas,Gender,NIS,NISN,NIK,'No KK':NoKK,'Nama Arab':NamaArab,'Tempat Lahir':TempatLahir,'Tanggal Lahir':TanggalLahir,'Nama Ayah':NamaAyah,'NIK Ayah':NIKAyah,'TTL Ayah':TTLAyah,'Pendidikan Ayah':PendAyah,'Pekerjaan Ayah':PekAyah,'Penghasilan Ayah':PengAyah,'Nama Ibu':NamaIbu,'NIK Ibu':NIKIbu,'TTL Ibu':TTLIbu,'Pendidikan Ibu':PendIbu,'Pekerjaan Ibu':PekIbu,'Penghasilan Ibu':PengIbu,Alamat,RT,RW,Kelurahan,Kecamatan,Kota,Provinsi,'Kode Pos':KodePos,'Status Yatim':StatusYatim,'Jenis Yatim':JenisYatim,'Anak Pegawai':AnakPegawai,'Nama Pegawai':NamaPegawai,'Anak Ke':AnakKe,'Jml Saudara':JmlSaudara,'Nama Sekolah Asal':SekolahAsal,'NPSN Sekolah Asal':NpsnAsal,'Alamat Sekolah Asal':AlamatAsal}));
         localStorage.setItem('ma_cache',JSON.stringify({t:Date.now(),d:slim,cols:SHEET_COLS}));
       }catch(__){}
     }
@@ -1092,6 +1108,7 @@ function redraw(id){
   if(id=='lst')return drawM();
   if(id=='dl')return drawDl();
   if(id=='fam')return drawFam();
+  if(id=='asal')return drawAsal();
   const el=document.getElementById(id);
   if(!el||!CARDS[id])return;
   const sc=el.querySelector('.scroll'),y=sc?sc.scrollTop:0;
@@ -1335,6 +1352,7 @@ function render(){
   }
 
   if(tab=='keluarga')return renderKeluarga();
+  if(tab=='asal')return renderAsal();
 
   const d=data();let h='';window._xt=[];
   const L=d.filter(x=>x['Gender']=='L'),P=d.filter(x=>x['Gender']=='P');
@@ -1373,7 +1391,7 @@ function render(){
   $('#app').innerHTML=h+'</div>';
 }
 
-let famBasis='both',famQ='',dlQ='';
+let famBasis='both',famQ='',dlQ='',asalQ='',asalJ='all';
 const nrm=v=>(v||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
 const FRANK={VII:1,VIII:2,IX:3,X:4,XI:5,XII:6};
 function famGroups(d,basis){
@@ -1419,28 +1437,150 @@ function renderKeluarga(){
   drawFam();
 }
 function pegKelCard(p){
-  const id='cPegKel',FR={VII:1,VIII:2,IX:3,X:4,XI:5,XII:6};
+  const id='cPegKel';
   const kkOf=x=>/^(?!0+$)\d{16}$/.test(x['No KK']||'')?x['No KK']:'';
-  const ayN=x=>nrm(x['Nama Ayah']);
-  const g=new Map(),kkAy=new Map();
-  const add=(k,x)=>{(g.get(k)||g.set(k,[]).get(k)).push(x)};
-  p.forEach(x=>{const kk=kkOf(x);if(!kk)return;const k=ayN(x)+'|'+kk;add(k,x);if(ayN(x)&&!kkAy.has(ayN(x)))kkAy.set(ayN(x),k)});
-  p.forEach(x=>{if(kkOf(x))return;const a=ayN(x);add(a?(kkAy.get(a)||a+'|'):'|'+nrm(x['Nama'])+x['NISN'],x)});
-  const rows=[...g.values()].map(m=>{
-    m.sort((a,b)=>(FR[b['Tingkat']]||0)-(FR[a['Tingkat']]||0)||a['Nama'].localeCompare(b['Nama']));
-    const f=k=>(m.find(x=>(x[k]||'').trim())||{})[k]||'';
-    return {m,ayah:f('Nama Ayah'),peg:f('Nama Pegawai'),kk:(m.find(kkOf)||{})['No KK']||''};
+  const nmOf=v=>{const a=nrm(v);return a.length>=5&&!/^(tidak|belum|none|null|nan)\b/.test(a)?a:''};
+  const par=p.map((_,i)=>i);
+  const find=i=>{while(par[i]!==i){par[i]=par[par[i]];i=par[i]}return i};
+  const link=kf=>{const m=new Map();p.forEach((x,i)=>{const k=kf(x);if(!k)return;if(m.has(k)){const a=find(m.get(k)),b=find(i);if(a!==b)par[b]=a}else m.set(k,i)})};
+  // 1) No KK sama  2) nama ayah + nama ibu sama  3) tanpa No KK: nama ayah saja (ibu kosong) / nama ibu saja (ayah kosong)
+  link(kkOf);
+  link(x=>{const a=nmOf(x['Nama Ayah']),b=nmOf(x['Nama Ibu']);return a&&b?'p|'+a+'|'+b:''});
+  link(x=>{const a=nmOf(x['Nama Ayah']);return !kkOf(x)&&a&&!nmOf(x['Nama Ibu'])?'a|'+a:''});
+  link(x=>{const b=nmOf(x['Nama Ibu']);return !kkOf(x)&&b&&!nmOf(x['Nama Ayah'])?'i|'+b:''});
+  // 4) tanpa No KK & hanya satu nama ortu: gabung ke satu-satunya keluarga lain yang memuat nama itu
+  const idx=kf=>{const m=new Map();p.forEach((x,i)=>{const k=kf(x);if(k)(m.get(k)||m.set(k,[]).get(k)).push(i)});return m};
+  const aI=idx(x=>nmOf(x['Nama Ayah'])),iI=idx(x=>nmOf(x['Nama Ibu']));
+  p.forEach((x,i)=>{
+    if(kkOf(x))return;
+    const a=nmOf(x['Nama Ayah']),b=nmOf(x['Nama Ibu']);
+    const list=a&&!b?aI.get(a):b&&!a?iI.get(b):null;if(!list)return;
+    const roots=[...new Set(list.map(find))];
+    if(roots.length==2){const r0=find(i);roots.forEach(r=>{if(r!==r0)par[r]=r0})}
   });
-  rows.sort((a,b)=>b.m.length-a.m.length||(a.peg||a.ayah).localeCompare(b.peg||b.ayah,'id'));
-  const C=[null,r=>r.peg,r=>r.ayah,r=>r.kk,r=>r.m.length,r=>r.m[0]['Nama']];
+  const g=new Map();
+  p.forEach((x,i)=>{const r=find(i);(g.get(r)||g.set(r,[]).get(r)).push(x)});
+  const rows=[...g.values()].map(m=>{
+    m.sort((a,b)=>(FRANK[b['Tingkat']]||0)-(FRANK[a['Tingkat']]||0)||COL.compare(a['Nama'],b['Nama']));
+    const top=k=>{const c={};m.forEach(x=>{const v=(x[k]||'').trim();if(v)c[v]=(c[v]||0)+1});return Object.keys(c).sort((a,b)=>c[b]-c[a])[0]||''};
+    return {m,ayah:top('Nama Ayah'),ibu:top('Nama Ibu'),peg:top('Nama Pegawai'),kk:(m.find(kkOf)||{})['No KK']||''};
+  });
+  rows.sort((a,b)=>b.m.length-a.m.length||COL.compare(a.peg||a.ayah||a.ibu,b.peg||b.ayah||b.ibu));
+  rows.forEach(r=>r.key='pk|'+r.m.map(dk).sort()[0]);
+  PKKEYS=rows.map(r=>r.key);
+  const C=[null,r=>r.peg,r=>r.ayah,r=>r.ibu,r=>r.kk,r=>r.m.length];
+  const kh=['No','Nama Siswa','NISN','Kelas · Markaz','JK','Tempat, Tanggal Lahir','Nama Ayah','Nama Ibu'];
   CARDS[id]=()=>{
     const s=SORT[id];let o=rows;
     if(s&&C[s.c])o=rows.slice().sort((a,b)=>{const A=C[s.c](a),B=C[s.c](b),ea=A===''||A==null,eb=B===''||B==null;if(ea&&!eb)return 1;if(!ea&&eb)return -1;return s.d*cmp(A,B)});
-    const body=o.map((r,i)=>`<tr><td class="cn">${i+1}</td><td class="nm">${esc(r.peg)||'-'}</td><td>${esc(r.ayah)||'-'}</td><td class="nw">${esc(r.kk)||'-'}</td><td class="cn">${r.m.length}</td><td>${r.m.map(x=>`<div class="ch"><b>${esc(x['Nama'])}</b> <span>· ${esc(x['Kelas'])||'-'} · ${esc(x._mk)}</span></div>`).join('')}</td></tr>`).join('');
-    return `<div class="card full" id="${id}"><h3><span>Anak Pegawai per Keluarga · ${rows.length} keluarga · ${p.length} anak</span></h3><div class="xw"><table class="xt pk"><tr><th class="cn">No</th>${th(id,1,'Nama Pegawai')}${th(id,2,'Nama Ayah')}${th(id,3,'No KK')}${th(id,4,'Jml Anak','cn')}${th(id,5,'Nama Anak (digabung)')}</tr>${body}</table></div></div>`;
+    const all=o.length&&o.every(r=>OPEN.has(r.key));
+    const body=o.map((r,i)=>{
+      const op=OPEN.has(r.key);
+      const main=`<tr class="mr${op?' open':''}" data-k="${esc(r.key)}"><td data-l="No" class="nt cn" onclick="tgr(this.parentNode)" title="Klik untuk lihat nama anak"><span class="tg-ico">${ICO.chevRight}</span> ${i+1}</td><td data-l="Nama Pegawai" class="nm">${esc(r.peg)||'-'}</td><td data-l="Nama Ayah">${esc(r.ayah)||'-'}</td><td data-l="Nama Ibu">${esc(r.ibu)||'-'}</td><td data-l="No KK" class="nw">${esc(r.kk)||'-'}</td><td data-l="Jml Anak" class="cn"><b>${r.m.length}</b></td></tr>`;
+      const det=()=>`<div class="cw"><table class="ct"><tr>${kh.map(h=>`<th>${h}</th>`).join('')}</tr>${r.m.map((x,j)=>`<tr><td>${j+1}</td><td class="nm">${esc(x['Nama'])}</td><td class="nw">${esc(x['NISN'])||'-'}</td><td class="nw">${esc(x['Kelas'])||'-'}<span class="sub">${esc(x._mk)}</span></td><td class="${x['Gender']}">${x['Gender']}</td><td>${esc(ttl(x))||'-'}</td><td>${esc(x['Nama Ayah'])||'-'}</td><td>${esc(x['Nama Ibu'])||'-'}</td></tr>`).join('')}</table></div>`;
+      LZ[r.key]=det;
+      return main+`<tr class="dr${op?' open':''}"${op?'':' data-lz="1"'}><td colspan="6">${op?det():''}</td></tr>`;
+    }).join('');
+    return `<div class="card full pkc" id="${id}"><h3><span>Anak Pegawai per Keluarga · ${rows.length} keluarga · ${p.length} anak</span><div class="tbh-r"><button type="button" class="cpbtn" onclick="pkAll()">${all?'Sembunyikan semua':'Tampilkan semua'}</button></div></h3><div class="lw dl fam"><table class="lst"><tr><th class="cn">No</th>${th(id,1,'Nama Pegawai')}${th(id,2,'Nama Ayah')}${th(id,3,'Nama Ibu')}${th(id,4,'No KK')}${th(id,5,'Jml Anak','cn')}</tr>${body}</table></div></div>`;
   };
   return CARDS[id]();
 }
+let PKKEYS=[];
+function pkAll(){const all=PKKEYS.length&&PKKEYS.every(k=>OPEN.has(k));PKKEYS.forEach(k=>all?OPEN.delete(k):OPEN.add(k));redraw('cPegKel')}
+const ACOLS=[['No'],['Nama Sekolah Asal',a=>a.name],['NPSN',a=>a.npsn],['Alamat Sekolah Asal',a=>a.alamat,'al'],['L',a=>a.L,'cn'],['P',a=>a.P,'cn'],['MTs',a=>a.mts,'cn'],['MA',a=>a.ma,'cn'],['Total',a=>a.n,'cn']];
+const AJ=[['sd','SD / MI'],['mts','MTs / SMP / PKBM'],['lain','Lainnya & belum diisi']];
+function asalJenjang(name){
+  const n=nrm(name);if(!n)return 'lain';
+  if(/\b(pkbm|paket b|kejar paket)\b/.test(n))return 'mts';
+  if(/^(smp|smpn|smps|smpit|mts|mtss|mtsn|madrasah tsanawiyah|sekolah menengah pertama)\b|\b(smp|mts|mtsn|tsanawiyah|smpit)\b/.test(n))return 'mts';
+  if(/^(sd|sdn|sdit|sds|mi|min|mis|madrasah ibtidaiyah|sekolah dasar)\b|\b(sdn|sdit|ibtidaiyah)\b/.test(n))return 'sd';
+  return 'lain';
+}
+const okNpsn=v=>/^[A-Za-z]?\d{6,10}$/.test(v)&&!/^[A-Za-z]?0+$/.test(v);
+function asalGroups(d){
+  const g=new Map(),nameKey=new Map();
+  const info=d.map(x=>{const raw=(x['Nama Sekolah Asal']||'').trim(),n=(x['NPSN Sekolah Asal']||'').trim();return {x,raw,k:raw?nrm(raw):'',n:okNpsn(n)?n:''}});
+  info.forEach(i=>{if(i.n&&i.k&&!nameKey.has(i.k))nameKey.set(i.k,'n|'+i.n)});
+  info.forEach(i=>{
+    const key=i.n?'n|'+i.n:i.k?(nameKey.get(i.k)||'nm|'+i.k):'';
+    let e=g.get(key);if(!e){e={key:'sa|'+(key||'-'),raw:{},m:[],empty:!key};g.set(key,e)}
+    e.m.push(i.x);if(i.raw&&i.k)e.raw[i.raw]=(e.raw[i.raw]||0)+1;
+  });
+  return [...g.values()].map(e=>{
+    const nm=Object.keys(e.raw).sort((a,b)=>e.raw[b]-e.raw[a]);
+    e.name=nm[0]||'Belum diisi';e.n=e.m.length;e.j=e.empty?'lain':asalJenjang(e.name);
+    e.L=e.m.filter(x=>x['Gender']=='L').length;e.P=e.m.filter(x=>x['Gender']=='P').length;
+    e.mts=e.m.filter(x=>x._jj=='MTs').length;e.ma=e.n-e.mts;
+    const pick=(f,ok)=>{const c={};e.m.forEach(x=>{const v=(x[f]||'').trim();if(ok(v))c[v]=(c[v]||0)+1});return Object.keys(c).sort((a,b)=>c[b]-c[a]||b.length-a.length)[0]||''};
+    e.npsn=e.empty?'':pick('NPSN Sekolah Asal',okNpsn);
+    e.alamat=e.empty?'':pick('Alamat Sekolah Asal',v=>v.length>=8&&!/^[-.\s]*a?[-.\s]*$/i.test(v));
+    e.m.sort((a,b)=>(FRANK[b['Tingkat']]||0)-(FRANK[a['Tingkat']]||0)||COL.compare(a['Nama'],b['Nama']));
+    return e;
+  }).sort((a,b)=>a.empty-b.empty||b.n-a.n||COL.compare(a.name,b.name));
+}
+function renderAsal(){
+  window._asal=asalGroups(data());
+  $('#app').innerHTML=`<div class="dtop"><h3>Siswa per Sekolah Asal · <span id="acnt"></span></h3>
+    <input class="fq" type="search" placeholder="Cari sekolah asal / nama siswa / NISN" value="${esc(asalQ)}" oninput="asalQ=this.value;drawAsal()">
+    <div class="acts"><button class="abtn" id="aall" onclick="asalAll()"></button><button class="abtn accent" onclick="exportAsal()">${ICO.export}<span>Export Data</span></button></div></div>
+  <div class="apills" id="apills"></div>
+  <small class="fnote" id="asum"></small>
+  <div class="fam" id="asalw"></div>`;
+  drawAsal();
+}
+function asalFiltered(){
+  const q=nrm(asalQ);if(!q)return window._asal;
+  return window._asal.filter(a=>(a.s??(a.s=nrm(a.name+' '+a.m.map(x=>x['Nama']+' '+x['NISN']).join(' ')))).includes(q));
+}
+function asalSort(F){
+  const s=SORT.asal;F=F.slice();
+  if(s&&ACOLS[s.c]&&ACOLS[s.c][1]){const g=ACOLS[s.c][1];F.sort((a,b)=>a.empty-b.empty||s.d*cmp(g(a),g(b)))}
+  return F;
+}
+function asalSections(){
+  const f=asalFiltered();
+  return AJ.map(([k,l])=>({k,l,list:asalSort(f.filter(a=>a.j==k))})).filter(x=>asalJ=='all'||x.k==asalJ);
+}
+function asalAll(){
+  const L=asalSections().flatMap(x=>x.list),all=L.length&&L.every(a=>OPEN.has(a.key));
+  L.forEach(a=>all?OPEN.delete(a.key):OPEN.add(a.key));drawAsal();
+}
+function setAsalJ(k){asalJ=k;drawAsal()}
+function drawAsal(){
+  const w=$('#asalw');if(!w)return;
+  const f=asalFiltered(),cnt=k=>f.filter(a=>a.j==k).length,sec=asalSections(),L=sec.flatMap(x=>x.list);
+  $('#apills').innerHTML=[['all','Semua',f.length],...AJ.map(([k,l])=>[k,l,cnt(k)])].map(([k,l,n])=>`<button type="button" class="${asalJ==k?'on':''}" onclick="setAsalJ('${k}')">${l}<b>${n}</b></button>`).join('');
+  const filled=L.filter(a=>!a.empty),tot=filled.reduce((n,a)=>n+a.n,0),blank=L.filter(a=>a.empty).reduce((n,a)=>n+a.n,0);
+  $('#acnt').textContent=filled.length+' sekolah';
+  $('#asum').textContent=tot+' siswa dengan sekolah asal terisi'+(blank?' · '+blank+' siswa belum diisi':'')+' — klik nomor urut untuk melihat daftar nama dan detailnya.';
+  $('#aall').textContent=L.length&&L.every(a=>OPEN.has(a.key))?'Sembunyikan semua':'Tampilkan semua';
+  if(!L.length){w.innerHTML='<div style="padding:28px;color:var(--mut)">Tidak ada data yang cocok.</div>';return}
+  const kh=['No','Nama Siswa','NIS / NISN','Kelas · Markaz','JK','Tempat, Tanggal Lahir','Anak Ke / Saudara','Nama Ayah','Nama Ibu','Desa, Kecamatan'];
+  w.innerHTML=sec.filter(x=>x.list.length).map(x=>{
+    const sch=x.list.filter(a=>!a.empty).length,sis=x.list.reduce((n,a)=>n+a.n,0);
+    const rows=x.list.map((a,i)=>{
+      const op=OPEN.has(a.key);
+      const main=`<tr class="mr${op?' open':''}" data-k="${esc(a.key)}"><td data-l="No" class="nt cn" onclick="tgr(this.parentNode)" title="Klik untuk lihat daftar siswa"><span class="tg-ico">${ICO.chevRight}</span> ${i+1}</td><td data-l="Sekolah Asal" class="nm">${esc(a.name)}</td><td data-l="NPSN" class="np">${esc(a.npsn)||'-'}</td><td data-l="Alamat" class="al">${esc(a.alamat)||'-'}</td><td data-l="L" class="cn">${a.L||'-'}</td><td data-l="P" class="cn">${a.P||'-'}</td><td data-l="MTs" class="cn">${a.mts||'-'}</td><td data-l="MA" class="cn">${a.ma||'-'}</td><td data-l="Total" class="cn"><b>${a.n}</b></td></tr>`;
+      const kidsFn=()=>a.m.map((s,j)=>`<tr><td>${j+1}</td><td class="nm">${esc(s['Nama'])}</td><td class="nw">${esc(s['NIS'])||'-'}<span class="sub">${esc(s['NISN'])||'-'}</span></td><td class="nw">${esc(s['Kelas'])||'-'}<span class="sub">${esc(s._mk)}</span></td><td class="${s['Gender']}">${s['Gender']}</td><td>${esc(ttl(s))||'-'}<span class="sub">${ageStr(s)}</span></td><td class="nw">${esc((s['Anak Ke']||'-')+' / '+(s['Jml Saudara']||'-'))}</td><td>${esc(s['Nama Ayah'])||'-'}</td><td>${esc(s['Nama Ibu'])||'-'}</td><td>${esc([title(s['Kelurahan']),title(s['Kecamatan'])].filter(Boolean).join(', '))||'-'}</td></tr>`).join('');
+      const det=()=>`<div class="cw"><table class="ct"><tr>${kh.map(h=>`<th>${h}</th>`).join('')}</tr>${kidsFn()}</table></div>`;
+      LZ[a.key]=det;
+      return main+`<tr class="dr${op?' open':''}"${op?'':' data-lz="1"'}><td colspan="9">${op?det():''}</td></tr>`;
+    }).join('');
+    return `<div class="asec"><h4>${x.l}</h4><span>${sch?sch+' sekolah · ':''}${sis} siswa</span></div><div class="lw dl"><table class="lst"><tr>${ACOLS.map((c,i)=>i?th('asal',i,c[0],c[2]):'<th class="cn">No</th>').join('')}</tr>${rows}</table></div>`;
+  }).join('');
+}
+function exportAsal(){
+  const sec=asalSections(),F=sec.flatMap(x=>x.list.map(a=>[x.l,a]));if(!F.length)return;
+  const asText=v=>v?`="${String(v).replace(/"/g,'""')}"`:'';
+  const q=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const hd=['Jenjang Sekolah Asal','Nama Sekolah Asal','NPSN Sekolah Asal','Alamat Sekolah Asal','Jumlah Siswa dari Sekolah','Nama Siswa','NIS','NISN','Kelas','Markaz','JK','Tempat, Tanggal Lahir','Anak Ke','Jumlah Saudara','Nama Ayah','Nama Ibu','Alamat'];
+  const rows=[];
+  F.forEach(([l,a])=>a.m.forEach(x=>rows.push([q(l),q(a.name),asText(a.npsn),q(a.alamat),a.n,q(x['Nama']),asText(x['NIS']),asText(x['NISN']),q(x['Kelas']),q(x._mk),q(x['Gender']),q(ttl(x)),q(x['Anak Ke']),q(x['Jml Saudara']),q(x['Nama Ayah']),q(x['Nama Ibu']),q(alamat(x))].join(','))));
+  const blob=new Blob(['\uFEFF'+[hd.map(q).join(','),...rows].join('\r\n')],{type:'text/csv;charset=utf-8;'});
+  const l=document.createElement('a');l.href=URL.createObjectURL(blob);l.download='Siswa_per_Sekolah_Asal_'+TA.replace('/','-')+'.csv';
+  document.body.appendChild(l);l.click();document.body.removeChild(l);URL.revokeObjectURL(l.href);
+}
+
 function famFiltered(){const q=nrm(famQ);return q?window._fam.filter(f=>(f.s??(f.s=nrm(f.m.map(x=>x['Nama']+' '+x['Nama Ayah']+' '+x['Nama Ibu']).join(' '))+' '+f.m.map(x=>x['No KK']).join(' '))).includes(q)):window._fam}
 function famList(){
   const F=famFiltered().slice(),s=SORT.fam;
